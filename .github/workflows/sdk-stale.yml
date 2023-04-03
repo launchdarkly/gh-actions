@@ -1,10 +1,8 @@
 name: 'Close stale issues and PRs'
+# Call this by uses: launchdarkly/gh-actions/.github/workflows/sdk-stale.yml@main
+
 on:
   workflow_call:
-    inputs:
-      dummy:
-        required: false
-        type: string
 
 jobs:
   stale:
