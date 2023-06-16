@@ -1,6 +1,6 @@
 set -e
 
-# Get the full DOCS path.
+# Get the full docs path.
 full_input_path="$(pwd)/$DOCS_PATH"
 
 # Action should have cloned the gh-pages to a subdirectory.
@@ -42,6 +42,7 @@ head_sha=""
 
 set +e
 
+# Handle the possibility of concurrent doc updates by pulling in any new changes.
 while true
 do
     
