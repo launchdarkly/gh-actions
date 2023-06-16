@@ -28,7 +28,7 @@ fi
 mkdir -p "$OUT_PATH"
 
 # Copy the new docs.
-cp -R "$full_input_path" "$OUT_PATH"/
+cp -R "$full_input_path"/* "$OUT_PATH"/
 
 git add "$OUT_PATH"
 
