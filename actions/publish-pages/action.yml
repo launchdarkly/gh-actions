@@ -25,7 +25,7 @@ runs:
       shell: bash
       run: |
         echo "Publishing docs for: $DOCS_PATH"
-        source ${{ GITHUB_ACTION_PATH }}/publish-doc.sh
+        source ${{ env.GITHUB_ACTION_PATH }}/publish-doc.sh
       env:
         DOCS_PATH: ${{ inputs.docs_path }}
         OUT_PATH: ${{ inputs.output_path }}
