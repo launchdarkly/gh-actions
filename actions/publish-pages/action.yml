@@ -1,0 +1,32 @@
+# This action publishes docs to github pages. The docs must have been build prior.
+name: Publish Docs
+description: Publish documentation to github pages.
+inputs:
+  docs_path:
+    description: 'The path containing the built documentation. Should be relative to the repository root.'
+    required: true
+  output_path:
+    description: 'The path, within the github pages branch, to put the documentation.'
+    required: false
+    default: './'
+  pages_branch:
+    description: 'The github pages branch. Defaults to "gh-pages"'
+    required: false
+    default: gh-pages
+runs:
+  using: composite
+  steps:
+    # We put the github pages in another directory.
+    - uses: actions/checkout@v3
+      with:
+        path: gh-pages
+        ref: ${{ inputs.pages_branch }}
+    - name: Publish Docs
+      shell: bash
+      run: |
+        echo "Publishing docs for: $DOCS_PATH"
+        source ${{ GITHUB_ACTION_PATH }}/publish-doc.sh
+      env:
+        DOCS_PATH: ${{ inputs.docs_path }}
+        OUT_PATH: ${{ inputs.output_path }}
+        PAGES_BRANCH: ${{ inputs.pages_branch }}
