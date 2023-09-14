@@ -33,4 +33,4 @@ runs:
         DOCS_PATH: ${{ inputs.docs_path }}
         OUT_PATH: ${{ inputs.output_path }}
         PAGES_BRANCH: ${{ inputs.pages_branch }}
-        GITHUB_TOKEN: ${{ inputs.token }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
