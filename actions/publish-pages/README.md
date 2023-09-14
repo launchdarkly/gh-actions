@@ -14,6 +14,7 @@ Publishing the 'docs' directory to the root of the github pages branch.
   name: 'Publish to Github pages'
   with:
     docs_path: docs
+    github_token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 Publishing from a subdirectory to a sub-directory. This may be done for different
@@ -24,4 +25,5 @@ packages in a monorepo.
   with:
     docs_path: packages/potato/docs
     output_path: packages/potato
+    github_token: ${{ secrets.GITHUB_TOKEN }}
 ```
