@@ -8,7 +8,7 @@ inputs:
   output_path:
     description: 'The path, within the github pages branch, to put the documentation.'
     required: false
-    default: './'
+    default: '.'
   pages_branch:
     description: 'The github pages branch. Defaults to "gh-pages"'
     required: false
