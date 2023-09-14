@@ -13,6 +13,9 @@ inputs:
     description: 'The github pages branch. Defaults to "gh-pages"'
     required: false
     default: gh-pages
+  github_token:
+    description: 'The github token to use for committing'
+    required: true
 runs:
   using: composite
   steps:
@@ -30,3 +33,4 @@ runs:
         DOCS_PATH: ${{ inputs.docs_path }}
         OUT_PATH: ${{ inputs.output_path }}
         PAGES_BRANCH: ${{ inputs.pages_branch }}
+        GITHUB_TOKEN: ${{ inputs.token }}
