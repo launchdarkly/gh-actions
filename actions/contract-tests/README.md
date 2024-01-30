@@ -31,6 +31,7 @@ jobs:
         with:
           # Inform the test harness of test service's port.
           test_service_port: ${{ env.TEST_SERVICE_PORT }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 # Options
@@ -43,5 +44,6 @@ jobs:
 | `test_harness_port` | Port the test harness is running on.                       | `8111`                             |
 | `debug_logging`     | Whether the test harness should emit debug logs            | `false`                            |
 | `extra_params`      | Any other params that should be passed to the test harness | None.                              |
+| `token`             | Github token, if available. Helps avoid ratelimiting.      | None.                              |
 
 [1] For Server-Sent-Event tests, use [`sse-contract-tests`](https://github.com/launchdarkly/sse-contract-tests).
