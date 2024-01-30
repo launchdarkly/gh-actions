@@ -1,0 +1,11 @@
+name: 'Test teh contract test action'
+# Call this by uses: launchdarkly/gh-actions/.github/workflows/sdk-stale.yml@main
+
+on:
+  workflow_call:
+
+jobs:
+  contract-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/actions/contract-tests
