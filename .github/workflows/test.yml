@@ -8,4 +8,4 @@ jobs:
   contract-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: ./.github/actions/contract-tests
+      - uses: launchdarkly/gh-actions/actions/contract-tests@80ac8cf4e16a6eb25c77cd3adf1435ce27bf938c
