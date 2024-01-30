@@ -37,8 +37,7 @@ runs:
     - name: 'Run Contract Tests'
       shell: bash
       run: |
-        curl ${{ inputs.token != '' && $AUTH_TOKEN || '' }} -s https://raw.githubusercontent.com/launchdarkly/${{ inputs.repo }}/main/downloader/run.sh | bash
+        curl ${{ inputs.token != '' && format('-H "Authorization: Token {0}"', inputs.token) || '' }} -s https://raw.githubusercontent.com/launchdarkly/${{ inputs.repo }}/main/downloader/run.sh | bash
       env:
         VERSION: ${{ inputs.version }}
         PARAMS: -url http://localhost:${{ inputs.test_service_port }} -port ${{ inputs.test_harness_port }} ${{ inputs.extra_params }} ${{ inputs.debug_logging == 'true' && '-debug' || '' }} -stop-service-at-end
-        AUTH_HEADER: ${{ format('-H "Authorization: Token {0}"', inputs.token) }}
