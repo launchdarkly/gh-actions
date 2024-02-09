@@ -21,6 +21,5 @@ runs:
       run: |
         repo=$(echo "${{ github.repository }}" | cut -d '/' -f  2)
         owner=$(echo "${{ github.repository }}" | cut -d '/' -f  1)
-        default_branch=$(curl --silent --header "Authorization: token ${{ inputs.token }}" \
-          https://api.github.com/repos/$owner/$repo | jq -r '.default_branch')
+        default_branch=$(gh api repos/$owner/$repo --jq '.default_branch')
         echo "value=$default_branch" >> $GITHUB_OUTPUT
