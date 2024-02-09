@@ -18,6 +18,8 @@ runs:
     - name: Get default branch
       id: get-default-branch
       shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
       run: |
         repo=$(echo "${{ github.repository }}" | cut -d '/' -f  2)
         owner=$(echo "${{ github.repository }}" | cut -d '/' -f  1)
