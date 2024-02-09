@@ -9,6 +9,7 @@ This repository contains LaunchDarkly shared GitHub Actions and Workflows for ot
 | [publish-pages](./actions/publish-pages/README.md)     | Publishes documentation to Github Pages.   |
 | [release-secrets](./actions/release-secrets/README.md) | Retrieve secrets from AWS Secrets Manager. |
 | [contract-tests](./actions/contract-tests/README.md)   | Run SDK/SSE contract tests.                |
+| [default-branch](./actions/default-branch/README.md)   | Determines the default branch of the repo. |
 
 
 ## Workflows

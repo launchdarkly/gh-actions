@@ -1,0 +1,26 @@
+name: Default Branch
+description: "Checks if the current branch is the default branch"
+inputs:
+  token:
+    description: 'GitHub API token.'
+    required: true
+outputs:
+  value:
+    description: 'The default branch of the repo.'
+    value: ${{ steps.get-default-branch.outputs.value }}
+  condition:
+    description: "'true' if the current branch is the default branch of the repo."
+    value: ${{ steps.get-default-branch.outputs.value == github.ref_name }}
+
+runs:
+  using: composite
+  steps:
+    - name: Get default branch
+      id: get-default-branch
+      shell: bash
+      run: |
+        repo=$(echo "${{ github.repository }}" | cut -d '/' -f  2)
+        owner=$(echo "${{ github.repository }}" | cut -d '/' -f  1)
+        default_branch=$(curl --silent --header "Authorization: token ${{ inputs.token }}" \
+          https://api.github.com/repos/$owner/$repo | jq -r '.default_branch')
+        echo "value=$default_branch" >> $GITHUB_OUTPUT
