@@ -11,7 +11,7 @@ inputs:
     required: false
   # If we add S3, then just have a list of S3 paths.
   s3_path_pairs:
-    description: 'A series of pairs of s3 paths to local paths. The local paths are relative to the project root. "launchdarkly-releaser/dotnet/LaunchDarkly.ClientSdk.snk = LaunchDarkly.ClientSdk.snk"'
+    description: 'A series of pairs of s3 paths to local paths. The local paths are relative to the project root. "some/s3/path = local-path/file"'
     required: false 
 
 runs:
