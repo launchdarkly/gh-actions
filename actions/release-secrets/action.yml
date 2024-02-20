@@ -43,5 +43,5 @@ runs:
           # Split each pair using '=' as the delimiter
           IFS='=' read -r path value <<< "${pair}"
 
-          echo aws s3 cp s3://"${path}" "${value}"
+          aws s3 cp s3://"${path}" "${value}"
         done
