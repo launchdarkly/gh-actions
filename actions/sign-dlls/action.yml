@@ -43,7 +43,7 @@ runs:
     - name: Sign DLLs
       shell: bash
       env:
-        CONFIG_PATH: ${{ inputs. build_configuration_path}}
+        CONFIG_PATH: ${{ inputs.build_configuration_path }}
         DLL_NAME: ${{ inputs.dll_name }}
       run: |
         for dll in $(find $CONFIG_PATH -name $DLL_NAME); do
