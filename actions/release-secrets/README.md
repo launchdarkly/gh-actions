@@ -25,5 +25,5 @@ This example uses the release-secrets action to get a strong-naming key.
   name: 'Get Strong Naming Key'
   with:
     aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
-    s3_path_pairs: 'launchdarkly-releaser/dotnet/LaunchDarkly.ClientSdk.snk = LaunchDarkly.ClientSdk.snk'
+    s3_path_pairs: 'some/s3/path = local-path/file'
 ```
