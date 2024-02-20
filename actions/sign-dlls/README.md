@@ -10,7 +10,7 @@ When building dotnet assemblies, each targeted framework will have a different a
 ```
 
 In the above example, the `build_configuration_path`` would be "./src/LaunchDarkly.Thing/bin/Release".
-The `dll_name` would be "LaunchDarkly/Things.dll".
+The `dll_name` would be "LaunchDarkly.Things.dll".
 
 # Requirements
 
