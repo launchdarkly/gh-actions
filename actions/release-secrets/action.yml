@@ -7,9 +7,12 @@ inputs:
     required: true
   # This uses this format to allow using the GetParameters action.
   ssm_parameter_pairs:
-    description: 'A series of pairs of paths to environment mappings. "/path = ENV_NAME", "/path2 = ENV_NAME2'
+    description: 'A series of pairs of paths to environment mappings. "/path = ENV_NAME, /path2 = ENV_NAME2"'
     required: false
   # If we add S3, then just have a list of S3 paths.
+  s3_path_pairs:
+    description: 'A series of pairs of s3 paths to local paths. The local paths are relative to the project root. "some/s3/path = local-path/file"'
+    required: false 
 
 runs:
   using: composite
@@ -20,8 +23,16 @@ runs:
         audience: https://github.com/launchdarkly
         role-to-assume: ${{ inputs.aws_assume_role }}
         aws-region: us-east-1
-    - uses: dkershner6/aws-ssm-getparameters-action@0fbd3a271ba44a5aa6a035c7746ffe4cf4eb04fe
+    - name: Load environment variables
+      uses: dkershner6/aws-ssm-getparameters-action@4fcb4872421f387a6c43058473acc1b22443fe13
       if: ${{ inputs.ssm_parameter_pairs != '' }}
       with:
         parameterPairs: ${{ inputs.ssm_parameter_pairs }}
         withDecryption: 'true'
+    - name: Download S3 files
+      shell: bash
+      if: ${{ inputs.s3_path_pairs != '' }}
+      env:
+        PATH_PAIRS: ${{ inputs.s3_path_pairs }}
+      run: |
+        source $GITHUB_ACTION_PATH/s3-copy.sh
