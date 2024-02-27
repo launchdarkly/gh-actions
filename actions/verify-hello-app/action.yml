@@ -1,0 +1,71 @@
+name: 'Verify Hello App'
+description: 'Ensure a hello-app style script outputs the expected response'
+inputs:
+  command:
+    description: 'Command to run the hello-app'
+    required: true
+  role_arn:
+    description: 'AWS role ARN used to pull SDK keys'
+    required: true
+  use_server_key:
+    description: 'Populate LAUNCHDARKLY_SERVER_KEY with a server-side SDK if true'
+    required: false
+    default: 'false'
+  use_client_key:
+    description: 'Populate LAUNCHDARKLY_CLIENT_KEY with a server-side SDK if true'
+    required: false
+    default: 'false'
+  use_mobile_key:
+    description: 'Populate LAUNCHDARKLY_MOBILE_KEY with a server-side SDK if true'
+    required: false
+    default: 'false'
+
+
+runs:
+  using: composite
+
+  steps:
+    - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.1.0
+      if: ${{ inputs.use_server_key == 'true' }}
+      name: 'Get the server SDK key'
+      with:
+        aws_assume_role: ${{ inputs.role_arn }}
+        ssm_parameter_pairs: '/sdk/common/hello-apps/server-key = LAUNCHDARKLY_SERVER_KEY'
+
+    - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.1.0
+      if: ${{ inputs.use_client_key == 'true' }}
+      name: 'Get the client SDK key'
+      with:
+        aws_assume_role: ${{ inputs.role_arn }}
+        ssm_parameter_pairs: '/sdk/common/hello-apps/client-key = LAUNCHDARKLY_CLIENT_KEY'
+
+    - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.1.0
+      if: ${{ inputs.use_mobile_key == 'true' }}
+      name: 'Get the mobile SDK key'
+      with:
+        aws_assume_role: ${{ inputs.role_arn }}
+        ssm_parameter_pairs: '/sdk/common/hello-apps/mobile-key = LAUNCHDARKLY_MOBILE_KEY'
+
+    - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.1.0
+      name: 'Get the test feature flag key'
+      with:
+        aws_assume_role: ${{ inputs.role_arn }}
+        ssm_parameter_pairs: '/sdk/common/hello-apps/boolean-flag-key = LAUNCHDARKLY_FLAG_KEY'
+
+    - name: 'Run hello-app command'
+      shell: bash
+      run: |
+        output=$(${{ inputs.command }})
+
+        if [ $? -ne 0 ]; then
+          echo "hello-app command '${{ inputs.command }}' exited with a non-zero status. Halting. Failure output follows."
+          echo $output
+          exit 1
+        fi
+
+        echo "$output" | grep -i "is true for this context"
+
+        if [ $? -ne 0 ]; then
+          echo "hello-app command did not produce the expected output"
+          exit 1
+        fi
