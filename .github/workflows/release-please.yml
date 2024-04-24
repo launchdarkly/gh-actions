@@ -1,0 +1,17 @@
+# This isn't meant for usage in consuming repos. It's for releasing this repo's actions/workflows itself.
+
+name: Release Please
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: google-github-actions/release-please-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          target-branch: ${{ github.ref_name }}
