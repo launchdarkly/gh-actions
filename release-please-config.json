@@ -20,15 +20,16 @@
       "release-type": "simple",
       "package-name": "sign-dlls"
     },
-    "actions/verify-hello-apps": {
+    "actions/verify-hello-app": {
       "release-type": "simple",
-      "package-name": "verify-hello-apps",
-      "bump-minor-pre-major": true,
-      "prerelease": true
+      "package-name": "verify-hello-app"
     },
     ".github/workflows": {
       "release-type": "simple",
-      "package-name": "workflows"
+      "package-name": "workflows",
+      "exclude-paths": [
+        "release-please.yml"
+      ]
     }
   }
 }
