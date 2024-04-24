@@ -4,5 +4,5 @@
   "actions/release-secrets": "1.1.0",
   "actions/sign-dlls": "1.0.0",
   "actions/verify-hello-app": "1.0.1",
-  ".github/workflows": "1.0.0"
+  ".github/workflows": "1.1.0"
 }
