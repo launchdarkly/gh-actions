@@ -1,5 +1,4 @@
 {
-  "bootstrap-sha": "9dde55e8f7236929b2f6ca19687d60fb711b9af3",
   "separate-pull-requests": true,
   "include-component-in-tag": true,
   "include-v-in-tag": true,
@@ -26,10 +25,7 @@
     },
     ".github/workflows": {
       "release-type": "simple",
-      "package-name": "workflows",
-      "exclude-paths": [
-        "release-please.yml"
-      ]
+      "package-name": "workflows"
     }
   }
 }
