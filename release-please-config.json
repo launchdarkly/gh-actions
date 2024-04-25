@@ -1,0 +1,31 @@
+{
+  "separate-pull-requests": true,
+  "include-component-in-tag": true,
+  "include-v-in-tag": true,
+  "packages": {
+    "actions/contract-tests": {
+      "release-type": "simple",
+      "package-name": "contract-tests"
+    },
+    "actions/publish-pages": {
+      "release-type": "simple",
+      "package-name": "publish-pages"
+    },
+    "actions/release-secrets": {
+      "release-type": "simple",
+      "package-name": "release-secrets"
+    },
+    "actions/sign-dlls": {
+      "release-type": "simple",
+      "package-name": "sign-dlls"
+    },
+    "actions/verify-hello-app": {
+      "release-type": "simple",
+      "package-name": "verify-hello-app"
+    },
+    ".github/workflows": {
+      "release-type": "simple",
+      "package-name": "workflows"
+    }
+  }
+}
