@@ -8,15 +8,15 @@ inputs:
     description: 'AWS role ARN used to pull SDK keys'
     required: true
   use_server_key:
-    description: 'Populate LAUNCHDARKLY_SERVER_KEY with a server-side SDK if true'
+    description: 'Populate LAUNCHDARKLY_SDK_KEY with a server-side SDK key if true'
     required: false
     default: 'false'
   use_client_key:
-    description: 'Populate LAUNCHDARKLY_CLIENT_KEY with a server-side SDK if true'
+    description: 'Populate LAUNCHDARKLY_CLIENT_SIDE_ID with a client-side ID if true'
     required: false
     default: 'false'
   use_mobile_key:
-    description: 'Populate LAUNCHDARKLY_MOBILE_KEY with a server-side SDK if true'
+    description: 'Populate LAUNCHDARKLY_MOBILE_KEY with a mobile key if true'
     required: false
     default: 'false'
 
@@ -30,14 +30,14 @@ runs:
       name: 'Get the server SDK key'
       with:
         aws_assume_role: ${{ inputs.role_arn }}
-        ssm_parameter_pairs: '/sdk/common/hello-apps/server-key = LAUNCHDARKLY_SERVER_KEY'
+        ssm_parameter_pairs: '/sdk/common/hello-apps/server-key = LAUNCHDARKLY_SDK_KEY'
 
     - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.1.0
       if: ${{ inputs.use_client_key == 'true' }}
       name: 'Get the client SDK key'
       with:
         aws_assume_role: ${{ inputs.role_arn }}
-        ssm_parameter_pairs: '/sdk/common/hello-apps/client-key = LAUNCHDARKLY_CLIENT_KEY'
+        ssm_parameter_pairs: '/sdk/common/hello-apps/client-key = LAUNCHDARKLY_CLIENT_SIDE_ID'
 
     - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.1.0
       if: ${{ inputs.use_mobile_key == 'true' }}
