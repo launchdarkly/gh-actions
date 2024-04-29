@@ -63,10 +63,7 @@ runs:
           exit 1
         fi
 
-        # NOTE: The first 'is true' block is for legacy hello apps that haven't
-        # been updated to meet the Hello spec
-        # (https://github.com/launchdarkly/sdk-specs/tree/main/specs/EXAM-SDK-example/HELLO-hello-apps).
-        echo "$output" | grep -iE "is true for this context|feature flag evaluates to true"
+        echo "$output" | grep -i "feature flag evaluates to true"
 
         if [ $? -ne 0 ]; then
           echo "hello-app command did not produce the expected output"
