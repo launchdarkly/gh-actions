@@ -37,7 +37,7 @@ runs:
     - name: 'Run Contract Tests'
       shell: bash
       run: |
-        curl ${{ inputs.token != '' && format('-H "Authorization: Token {0}"', inputs.token) || '' }} -s https://raw.githubusercontent.com/launchdarkly/${{ inputs.repo }}/v2/downloader/run.sh | bash
+        curl ${{ inputs.token != '' && format('-H "Authorization: Token {0}"', inputs.token) || '' }} -s https://raw.githubusercontent.com/launchdarkly/${{ inputs.repo }}/${{ inputs.version }}/downloader/run.sh | bash
       env:
         # The token is directly used in the first curl command above to obtain the downloader script, to avoid rate limiting.
         # The token is then passed to the downloader script itself, so it can perform more API requests and hopefully avoid rate limiting again.
