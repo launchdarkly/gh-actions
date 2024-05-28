@@ -55,7 +55,7 @@ runs:
     - name: 'Run hello-app command'
       shell: bash
       run: |
-        output=$(${{ inputs.command }})
+        output=$((${{ inputs.command }}) 2>&1)
 
         if [ $? -ne 0 ]; then
           echo "hello-app command '${{ inputs.command }}' exited with a non-zero status. Halting. Failure output follows."
