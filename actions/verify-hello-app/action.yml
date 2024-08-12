@@ -25,28 +25,28 @@ runs:
   using: composite
 
   steps:
-    - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.1.0
+    - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.2.0
       if: ${{ inputs.use_server_key == 'true' }}
       name: 'Get the server SDK key'
       with:
         aws_assume_role: ${{ inputs.role_arn }}
         ssm_parameter_pairs: '/sdk/common/hello-apps/server-key = LAUNCHDARKLY_SDK_KEY'
 
-    - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.1.0
+    - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.2.0
       if: ${{ inputs.use_client_key == 'true' }}
       name: 'Get the client SDK key'
       with:
         aws_assume_role: ${{ inputs.role_arn }}
         ssm_parameter_pairs: '/sdk/common/hello-apps/client-key = LAUNCHDARKLY_CLIENT_SIDE_ID'
 
-    - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.1.0
+    - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.2.0
       if: ${{ inputs.use_mobile_key == 'true' }}
       name: 'Get the mobile SDK key'
       with:
         aws_assume_role: ${{ inputs.role_arn }}
         ssm_parameter_pairs: '/sdk/common/hello-apps/mobile-key = LAUNCHDARKLY_MOBILE_KEY'
 
-    - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.1.0
+    - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.2.0
       name: 'Get the test feature flag key'
       with:
         aws_assume_role: ${{ inputs.role_arn }}
