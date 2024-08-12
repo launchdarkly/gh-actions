@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/launchdarkly/gh-actions/compare/verify-hello-app-v2.0.0...verify-hello-app-v2.0.1) (2024-08-12)
+
+
+### Bug Fixes
+
+* Bump release-secrets version to avoid node16 dependency ([#37](https://github.com/launchdarkly/gh-actions/issues/37)) ([a1b75f0](https://github.com/launchdarkly/gh-actions/commit/a1b75f06607efe140a9a650bc1a2c63545ecd2c4))
+
 ## [2.0.0](https://github.com/launchdarkly/gh-actions/compare/verify-hello-app-v1.0.1...verify-hello-app-v2.0.0) (2024-04-29)
 
 
