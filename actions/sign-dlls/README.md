@@ -20,7 +20,7 @@ The repository must be configured with OIDC, allowing access to an AWS account.
 
 This example uses the sign-dlls action to sign the dotnet client DLLs.
 ```
-- uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.0.1
+- uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.2.0
   name: Get secrets
   with:
     aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
