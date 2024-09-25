@@ -1,0 +1,117 @@
+name: Evaluate Policy
+description: Evaluate the OPA license policy against the BOM
+
+inputs:
+  policy-file:
+    description: Filename of the license policy.
+    required: false
+    default: license_policy.rego
+  bom-file:
+    description: File name for the Bill of Materials file
+    required: false
+    default: bom.json
+  opa-query:
+    description: OPA query to use. If anything is returned, the build will fail.
+    required: false
+    default: data.launchdarkly.violation[x]
+  opa-version:
+    description: The Open Policy Agent version to use.
+    required: false
+    default: latest
+  cyclonedx-version:
+    description: The CycloneDX version to use.
+    required: false
+    default: latest
+  artifacts-pattern:
+    description: Download one or more artifacts and merge them, prior to validation.
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - name: Open Policy Agent CLI version
+      id: versions
+      shell: bash
+      run: |
+        if [[ ${{ inputs.opa-version }} == latest ]]; then
+          echo "opa=$(curl -s https://api.github.com/repos/open-policy-agent/opa/releases/latest | jq -r .tag_name)" >> $GITHUB_OUTPUT
+        else
+          echo "opa=${{ inputs.opa-version }}" >> $GITHUB_OUTPUT
+        fi
+
+        if [[ "${{ inputs.artifacts-pattern }}" != "" && ${{ inputs.cyclonedx-version }} == latest ]]; then
+          echo "cyclonedx=$(curl -s https://api.github.com/repos/CycloneDX/cyclonedx-cli/releases/latest | jq -r .tag_name)" >> $GITHUB_OUTPUT
+        else
+          echo "cyclonedx=${{ inputs.cyclonedx-version }}" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Cache Open Policy Agent
+      uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+      id: cache-opa
+      with:
+        path: /usr/local/bin/opa
+        key: opa-${{ steps.versions.outputs.opa }}
+
+    - name: Install Open Policy Agent
+      if: steps.cache-opa.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        curl -L https://openpolicyagent.org/downloads/${{ steps.versions.outputs.opa }}/opa_linux_amd64 -o /usr/local/bin/opa
+        chmod +x /usr/local/bin/opa
+
+    - name: Cache CycloneDX CLI tool
+      if: inputs.artifacts-pattern != ''
+      uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+      id: cyclonedx-opa
+      with:
+        path: /usr/local/bin/cyclonedx
+        key: cyclonedx-${{ steps.versions.outputs.cyclonedx }}
+
+    - name: Install CycloneDX CLI tool
+      if: inputs.artifacts-pattern != '' && steps.cyclonedx-opa.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        curl -L https://github.com/CycloneDX/cyclonedx-cli/releases/download/${{ steps.versions.outputs.cyclonedx }}/cyclonedx-linux-x64 -o /usr/local/bin/cyclonedx
+        chmod +x /usr/local/bin/cyclonedx
+
+    - name: Get all BOMs
+      if: inputs.artifacts-pattern != ''
+      uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e  # v4.1.7
+      with:
+        path: .
+        pattern: ${{ inputs.artifacts-pattern }}
+
+    - name: Merge BOMs
+      if: inputs.artifacts-pattern != ''
+      run: cyclonedx merge --input-files ${{ inputs.artifacts-pattern }}/*.json --output-file ${{ inputs.bom-file }}
+      shell: bash
+
+    - name: Store Bill of Materials
+      if: inputs.artifacts-pattern != ''
+      uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
+      with:
+        name: merged-bom
+        path: ${{ inputs.bom-file }}
+        retention-days: 90
+
+    - name: Evaluate Policy
+      run: |
+        json_data="$(opa eval --fail-defined -i ${{ inputs.bom-file }} -d $GITHUB_ACTION_PATH/${{ inputs.policy-file }} '${{ inputs.opa-query }}' --format json)" || {
+          rc=$?
+          {
+            echo "Status: :x: failed"
+            echo ""
+            jq <<<"$json_data" -r '
+              [.result[].expressions[].value]  |   # Filter down to what we want
+              (.[0] | to_entries | map(.key)),     # First element keys as header row
+              ["---", "---"],                      # Markdown table header identifier
+              (.[] | to_entries | map(.value)) |   # Finally get the real values
+              join(" | ")                          # join by "|" (to mark columns)
+            '
+          } >> $GITHUB_STEP_SUMMARY
+          printf "%s\n" "$json_data"
+          exit $rc
+        }
+
+        echo "Status: :white_check_mark: success" >> $GITHUB_STEP_SUMMARY
+      shell: bash
