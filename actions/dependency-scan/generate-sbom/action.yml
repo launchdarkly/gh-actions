@@ -1,0 +1,68 @@
+name: Generate SBOM
+description: Generate a Software Bill of Materials (SBOM)
+
+inputs:
+  types:
+    description: 'Comma separated project types. Please refer to https://cyclonedx.github.io/cdxgen/#/PROJECT_TYPES for supported languages/platforms.'
+    required: true
+  cdxgen-version:
+    description: 'Version of cdxgen to use'
+    required: false
+    default: '10.9.2'
+  project-directory:
+    description: 'Relative path (from root of repo) to the root of the golang project / module'
+    required: false
+    default: '.'
+  fetch-license:
+    description: 'Fetch license information for dependencies'
+    required: false
+    default: 'true'
+  recurse:
+    description: 'Recurse mode suitable for mono-repos.'
+    required: false
+    default: 'true'
+
+runs:
+  using: composite
+
+  steps:
+  - name: Setup Node
+    uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
+    with:
+      node-version: 20.x
+
+  - name: Install cdxgen
+    run: npm list -g | grep -qF @cyclonedx/cdxgen@${{ inputs.cdxgen-version }} || npm install -g @cyclonedx/cdxgen@${{ inputs.cdxgen-version }}
+    shell: bash
+
+  - name: Get information
+    id: info
+    shell: bash
+    run: |
+      if [[ "${{ inputs.types }}" == *,* ]]; then
+        echo "artifact_name=bom" >> "$GITHUB_OUTPUT"
+        echo "bom_file=bom.json" >> "$GITHUB_OUTPUT"
+      else
+        echo "artifact_name=bom-${{ inputs.types }}" >> "$GITHUB_OUTPUT"
+        echo "bom_file=bom.${{ inputs.types }}.json" >> "$GITHUB_OUTPUT"
+      fi
+
+  - name: Generate Bill of Materials
+    shell: bash
+    run: |
+      IFS=, read -ra types <<<"${{ inputs.types }}"
+      args=()
+      for type in "${types[@]}"; do
+        args+=(-t "$type")
+      done
+      [[ "${{ inputs.recurse }}" != true ]] && args+=(--no-recurse)
+      cdxgen "${args[@]}" -o "${{ steps.info.outputs.bom_file }}" ${{ inputs.project-directory }}
+    env:
+      FETCH_LICENSE: ${{ inputs.fetch-license }}
+
+  - name: Store Bill of Materials
+    uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+    with:
+      name: ${{ steps.info.outputs.artifact_name }}
+      path: ${{ steps.info.outputs.bom_file }}
+      retention-days: 1
