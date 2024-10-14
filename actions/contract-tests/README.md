@@ -27,7 +27,7 @@ jobs:
         run: $TEST_SERVICE_BINARY $TEST_SERVICE_PORT 2>&1 &
         
         # Here's the actual usage of this action!
-      - uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests-v1.0.0
+      - uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests-v1.1.0
         with:
           # Inform the test harness of test service's port.
           test_service_port: ${{ env.TEST_SERVICE_PORT }}
