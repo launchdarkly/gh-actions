@@ -1,0 +1,46 @@
+name: 'Validate PR Approvers'
+description: 'Check if PR approver is a member of the required team'
+inputs:
+  github-token:
+    description: 'GitHub token for API access'
+    required: true
+  repository-owner:
+    description: 'The owner of the repository'
+    required: true
+  repository:
+    description: 'The name of the repository'
+    required: true
+  pull-request-number:
+    description: 'The number of the pull request'
+    required: true
+  required-team:
+    description: 'The name of the team that approvers must belong to'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: Validate Approver Team Membership
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        REPOSITORY_OWNER: ${{ inputs.repository-owner }}
+        REPOSITORY: ${{ inputs.repository }}
+        PULL_REQUEST_NUMBER: ${{ inputs.pull-request-number }}
+        REQUIRED_TEAM: ${{ inputs.required-team }}
+      run: |
+        APPROVERS=$(gh api "repos/${REPOSITORY}/pulls/${PULL_REQUEST_NUMBER}/reviews" -q '.[].user.login' 2>/dev/null || echo "") 
+      
+        VALID_APPROVER=0
+        for APPROVER in $APPROVERS; do
+          TEAM_MEMBER=$(gh api "orgs/${REPOSITORY_OWNER}/teams/${REQUIRED_TEAM}/memberships/${APPROVER}" -q '.state' 2>/dev/null || echo "") 
+
+          if [ "$TEAM_MEMBER" == "active" ]; then
+            VALID_APPROVER=1 
+            break
+          fi
+        done
+
+        if [ $VALID_APPROVER -eq 0 ]; then
+          echo "No valid approvers found in PR approvers list: $APPROVERS"
+          exit 1
+        fi
