@@ -17,7 +17,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - uses: ./.github/actions/validate-approvers
+      - uses: launchdarkly/gh-actions/actions/validate-approvers
         if: github.event.review.state == 'approved'
         with:
           github-token: ${{ secrets.GH_PAT }} # Pass in a GitHub token with API access
