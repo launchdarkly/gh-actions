@@ -27,10 +27,6 @@
     "actions/verify-hello-app": {
       "release-type": "simple",
       "package-name": "verify-hello-app"
-    },
-    ".github/workflows": {
-      "release-type": "simple",
-      "package-name": "workflows"
     }
   }
 }
