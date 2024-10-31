@@ -36,14 +36,15 @@ jobs:
 
 # Options
 
-| Name                | Description                                                | Default                            |
-|---------------------|------------------------------------------------------------|------------------------------------|
-| `repo`              | Which tests to run (git repo)                              | `sdk-test-harness` (see below [1]) |
-| `version`           | Version of the tests                                       | `v2`                               |
-| `test_service_port` | Port the test service (your SDK) is running on.            | `8123`                             |
-| `test_harness_port` | Port the test harness is running on.                       | `8111`                             |
-| `debug_logging`     | Whether the test harness should emit debug logs            | `false`                            |
-| `extra_params`      | Any other params that should be passed to the test harness | None.                              |
-| `token`             | Github token, if available. Helps avoid ratelimiting.      | None.                              |
+| Name                       | Description                                                | Default                            |
+|----------------------------|------------------------------------------------------------|------------------------------------|
+| `repo`                     | Which tests to run (git repo)                              | `sdk-test-harness` (see below [1]) |
+| `version`                  | Version of the tests                                       | `v2`                               |
+| `test_service_port`        | Port the test service (your SDK) is running on.            | `8123`                             |
+| `test_harness_port`        | Port the test harness is running on.                       | `8111`                             |
+| `enable_persistence_tests` | Enables persistent store test support.                     | `false`                            |
+| `debug_logging`            | Whether the test harness should emit debug logs            | `false`                            |
+| `extra_params`             | Any other params that should be passed to the test harness | None.                              |
+| `token`                    | Github token, if available. Helps avoid ratelimiting.      | None.                              |
 
 [1] For Server-Sent-Event tests, use [`sse-contract-tests`](https://github.com/launchdarkly/sse-contract-tests).
