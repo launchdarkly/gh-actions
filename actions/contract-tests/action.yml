@@ -21,6 +21,10 @@ inputs:
     required: false
     description: "Port of the test harness."
     default: '8111'
+  enable_persistence_tests:
+    required: false
+    description: "Whether or not to enable support for persistence tests"
+    default: true
   debug_logging:
     description: "Whether the test harness should print debug logs for failed tests."
     required: false
@@ -47,4 +51,4 @@ runs:
         # The token is then passed to the downloader script itself, so it can perform more API requests and hopefully avoid rate limiting again.
         GITHUB_TOKEN: ${{ inputs.token }}
         VERSION: ${{ inputs.version }}
-        PARAMS: -url http://localhost:${{ inputs.test_service_port }} -port ${{ inputs.test_harness_port }} ${{ inputs.extra_params }} ${{ inputs.debug_logging == 'true' && '-debug' || '' }} -stop-service-at-end
+        PARAMS: -url http://localhost:${{ inputs.test_service_port }} -port ${{ inputs.test_harness_port }} ${{ inputs.extra_params }} ${{ inputs.enable_persistence_tests == 'true' && '-enable-persistence-tests' || '' }} ${{ inputs.debug_logging == 'true' && '-debug' || '' }} -stop-service-at-end
