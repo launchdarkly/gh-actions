@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/launchdarkly/gh-actions/compare/contract-tests-v1.1.0...contract-tests-v1.2.0) (2024-10-31)
+
+
+### Features
+
+* Add option to enable persistent store test support ([#47](https://github.com/launchdarkly/gh-actions/issues/47)) ([a6e3543](https://github.com/launchdarkly/gh-actions/commit/a6e3543f7c6fbf6c3cab5ee3bb2b53c9abf59fd5))
+
 ## [1.1.0](https://github.com/launchdarkly/gh-actions/compare/contract-tests-v1.0.2...contract-tests-v1.1.0) (2024-10-01)
 
 
