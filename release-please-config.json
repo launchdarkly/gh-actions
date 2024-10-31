@@ -7,6 +7,10 @@
       "release-type": "simple",
       "package-name": "contract-tests"
     },
+    "actions/persistent-stores": {
+      "release-type": "simple",
+      "package-name": "persistent-stores"
+    },
     "actions/publish-pages": {
       "release-type": "simple",
       "package-name": "publish-pages"
