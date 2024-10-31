@@ -9,8 +9,7 @@
     },
     "actions/persistent-stores": {
       "release-type": "simple",
-      "package-name": "persistent-stores",
-      "release-as": "0.0.1"
+      "package-name": "persistent-stores"
     },
     "actions/publish-pages": {
       "release-type": "simple",
