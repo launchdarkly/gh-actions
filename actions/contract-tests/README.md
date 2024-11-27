@@ -39,7 +39,8 @@ jobs:
 | Name                       | Description                                                | Default                            |
 |----------------------------|------------------------------------------------------------|------------------------------------|
 | `repo`                     | Which tests to run (git repo)                              | `sdk-test-harness` (see below [1]) |
-| `version`                  | Version of the tests                                       | `v2`                               |
+| `version`                  | Version of the tests. This is the tag.                     | `v2`                               |
+| `branch`                   | The downloader script is fetched from this branch.         | `v2`                               |
 | `test_service_port`        | Port the test service (your SDK) is running on.            | `8123`                             |
 | `test_harness_port`        | Port the test harness is running on.                       | `8111`                             |
 | `enable_persistence_tests` | Enables persistent store test support.                     | `false`                            |
