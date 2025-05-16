@@ -21,6 +21,28 @@ runs:
   steps:
 
     #
+    # Linux services (using Docker)
+    #
+
+    - name: "Consul for Linux"
+      shell: bash
+      if: ${{ inputs.consul == 'true' && runner.os == 'Linux' }}
+      run: |
+        docker run -d --name consul -p 8500:8500 hashicorp/consul
+
+    - name: "DynamoDB for Linux" 
+      shell: bash
+      if: ${{ inputs.dynamodb == 'true' && runner.os == 'Linux' }}
+      run: |
+        docker run -d --name dynamodb -p 8000:8000 amazon/dynamodb-local
+
+    - name: "Redis for Linux"
+      shell: bash
+      if: ${{ inputs.redis == 'true' && runner.os == 'Linux' }}
+      run: |
+        docker run -d --name redis -p 6379:6379 redis
+
+    #
     # Windows services
     #
 
