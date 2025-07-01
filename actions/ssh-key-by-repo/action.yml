@@ -1,0 +1,27 @@
+name: ssh-key-by-repo
+description: 'Configure SSH keys for accessing different repositories.'
+inputs:
+  repo_keys_map:
+    required: true
+    description: 'A map of repo names to the SSH key to use for that repo.'
+  include_git_ssh_command:
+    required: true
+    description: 'Whether to export the GIT_SSH_COMMAND variable.'
+    default: 'true'
+  include_git_instead_of:
+    required: true
+    description: "Whether to configure git's insteadOf options."
+    default: 'true'
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        "$GITHUB_ACTION_PATH/bin/git_ssh_key_by_repo" prepare "$INCLUDE_GIT_INSTEAD_OF" "$REPO_KEYS_MAP"
+      env:
+        REPO_KEYS_MAP: ${{ inputs.repo_keys_map }}
+        INCLUDE_GIT_INSTEAD_OF: "${{ inputs.include_git_instead_of == 'true' }}"
+    - shell: bash
+      if: ${{ inputs.include_git_ssh_command == 'true' }}
+      run: |
+        echo "GIT_SSH_COMMAND=$GITHUB_ACTION_PATH/bin/git_ssh_key_by_repo" >> "$GITHUB_ENV"

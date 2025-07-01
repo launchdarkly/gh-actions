@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+
+set -eu
+
+repo_to_file() {
+  local repo="$1"
+  printf "%s/.ssh/id_rsa_%s" "$HOME" "$(sed -r -e 's/[\/:><"\\\|?*]+/_/g' -e 's/^_+//' <<<"$repo")"
+}
+
+proxy_ssh() {
+  if [[ $1 == '-G' ]] && (($# == 2)); then
+    exec ssh "$@"
+  fi
+
+  if [[ ! $2 =~ git-(upload|receive)-pack\ \'(.*)\' && $# == 2 ]]; then
+    printf "unexpected form: " >&2
+    printf ' %s' "$@" >&2
+    printf '\n' >&2
+    exit 1
+  fi
+
+  extra_args=()
+  for arg in "$@"; do
+    if [[ $arg =~ git-(upload|receive)-pack\ \'(.*)\' ]]; then
+      repo="${BASH_REMATCH[2]}"
+      if [[ "${repo: -4}" == ".git" ]]; then
+        repo="${repo:0:-4}"
+      fi
+      ssh_key_file="$(repo_to_file "$repo")"
+
+      if [[ -f "$ssh_key_file" ]]; then
+        extra_args+=("-i" "$ssh_key_file" "-o" "IdentitiesOnly=yes")
+      fi
+
+      break
+    fi
+  done
+
+  exec ssh "${extra_args[@]}" "$@"
+}
+
+prepare_keys() {
+  doGitInsteadOf="$1"
+  keys="$2"
+
+  mkdir -p "$HOME/.ssh"
+  while read -r repo; do
+    key="$(jq -r ".\"$repo\"" <<<"$keys")"
+    if ! err="$(ssh-keygen -y -f /dev/stdin <<<"$key" 2>&1)"; then
+      printf >&2 'ERROR: key for repository "%s" was not a valid key: %s\n' "$repo" "$err"
+      exit 1
+    fi
+    echo "$key" >"$(repo_to_file "$repo")"
+    if [[ $doGitInsteadOf == "true" ]]; then
+      git config --global url."git@github.com:${repo}".insteadOf "https://github.com/${repo}"
+    fi
+  done < <(jq -r 'keys[]' <<< "$keys")
+  chmod 600 "$HOME/.ssh/id_rsa_"*
+  chmod -R go-rwx "$HOME/.ssh"
+}
+
+main() {
+  if [[ $# -eq 0 ]]; then
+    cat >&2 <<EOF
+Usage:
+    $0 prepare <json with keys>
+    $0 other git args
+
+Example json:
+  {
+    "<github_owner>/<github_repo>": "<private_key>"
+  }
+EOF
+    exit 1
+  fi
+
+  if [[ $1 == "prepare" ]]; then
+    shift
+    prepare_keys "$@"
+    return
+  fi
+
+  proxy_ssh "$@"
+}
+
+main "$@"
