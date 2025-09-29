@@ -19,13 +19,13 @@ jobs:
       - uses: actions/checkout@v3
 
       # Here's the actual usage of this action!
-      - uses: launchdarkly/gh-actions/actions/persistent-stores@persistent-stores-v1.0.0
+      - uses: launchdarkly/gh-actions/actions/persistent-stores@persistent-stores-v0
         with:
           redis: true
           consul: true
           dynamodb: true
 
-      - uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests-v1.1.0
+      - uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests-v1
         with:
           test_service_port: ${{ env.TEST_SERVICE_PORT }}
           enable_persistence_tests: 'true'
