@@ -1,6 +1,6 @@
 {
   "actions/contract-tests": "1.2.0",
-  "actions/persistent-stores": "0.1.0",
+  "actions/persistent-stores": "0.1.1",
   "actions/publish-pages": "1.0.2",
   "actions/release-secrets": "1.2.0",
   "actions/sign-dlls": "1.0.0",

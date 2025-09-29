@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/launchdarkly/gh-actions/compare/persistent-stores-v0.1.0...persistent-stores-v0.1.1) (2025-09-29)
+
+
+### Bug Fixes
+
+* Downgrade to Consul 1.21.4 due to active bug ([#61](https://github.com/launchdarkly/gh-actions/issues/61)) ([9adfaa0](https://github.com/launchdarkly/gh-actions/commit/9adfaa04f4efcffcf809e48e2f2faf4d3367c88d))
+
 ## [0.1.0](https://github.com/launchdarkly/gh-actions/compare/persistent-stores-v0.0.1...persistent-stores-v0.1.0) (2025-05-16)
 
 
