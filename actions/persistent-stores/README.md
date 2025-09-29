@@ -2,23 +2,7 @@
 
 This action is useful to simplify the process of running persistent store instances on GitHub Actions. It is particularly useful when used alongside the contract-tests action.
 
-It is capable of running persistent store instances on both Mac and Windows. Linux users should instead rely on the service container support provided natively by GitHub actions, as shown below.
-
-```yml
-services:
-    redis:
-    image: redis
-    ports:
-        - 6379:6379
-    dynamodb:
-    image: amazon/dynamodb-local
-    ports:
-        - 8000:8000
-    consul:
-    image: hashicorp/consul
-    ports:
-        - 8500:8500
-```
+It is capable of running persistent store instances on Linux, Mac, and Windows.
 
 # Requirements
 
