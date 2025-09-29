@@ -7,11 +7,46 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
 jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
-      - uses: google-github-actions/release-please-action@v4
+      - uses: googleapis/release-please-action@c2a5a2bd6a758a0937f1ddb1e8950609867ed15c # v4.3.0
+        id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           target-branch: ${{ github.ref_name }}
+
+      - name: Update major version tags for components
+        if: ${{ steps.release.outputs.releases_created }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          
+          # Get the paths that had releases created
+          PATHS_RELEASED='${{ steps.release.outputs.paths_released }}'
+          
+          # Parse the JSON array of released paths
+          echo "$PATHS_RELEASED" | jq -r '.[]' | while read -r path; do
+            # Get the tag name for this component
+            tag_name="${{ steps.release.outputs['${path}--tag_name'] }}"
+            
+            # Extract component name from tag name (e.g., contract-tests-v1.2.3 -> contract-tests)
+            component=$(echo "$tag_name" | sed 's/-v[0-9].*//')
+            
+            # Get the major version for this component
+            major_version="${{ steps.release.outputs['${path}--major'] }}"
+            
+            # Create component-specific major tag
+            major_tag="${component}-v${major_version}"
+            echo "Creating major tag: $major_tag for tag: $tag_name"
+            
+            # Create and push the major tag
+            git tag -f "$major_tag" "$tag_name"
+            git push -f origin "$major_tag"
+          done
