@@ -28,7 +28,8 @@ runs:
       shell: bash
       if: ${{ inputs.consul == 'true' && runner.os == 'Linux' }}
       run: |
-        docker run -d --name consul -p 8500:8500 hashicorp/consul
+        # 1.21.5 has a known issue https://github.com/hashicorp/consul/issues/22822 so we need to run 1.21.4 until they fix the issue
+        docker run -d --name consul -p 8500:8500 hashicorp/consul:1.21.4
 
     - name: "DynamoDB for Linux" 
       shell: bash
