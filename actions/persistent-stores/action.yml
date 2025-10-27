@@ -54,8 +54,11 @@ runs:
     - name: "Consul for Windows"
       shell: powershell
       if: ${{ inputs.consul == 'true' && runner.os == 'Windows' }}
+      # 1.21.5 has a known issue
+      # https://github.com/hashicorp/consul/issues/22822 so we need to run
+      # 1.20.1 until they fix the issue
       run: |
-        choco install consul
+        choco install consul --version=1.20.1
         Start-Process consul -ArgumentList 'agent',  '-dev'
 
     - name: "DynamoDB for Windows"
