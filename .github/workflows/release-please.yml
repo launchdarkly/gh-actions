@@ -22,6 +22,10 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           target-branch: ${{ github.ref_name }}
 
+      - name: Checkout code
+        if: ${{ steps.release.outputs.releases_created }}
+        uses: actions/checkout@v4
+
       - name: Update major version tags for components
         if: ${{ steps.release.outputs.releases_created }}
         run: |
@@ -46,7 +50,7 @@ jobs:
             major_tag="${component}-v${major_version}"
             echo "Creating major tag: $major_tag for tag: $tag_name"
             
-            # Create and push the major tag
-            git tag -f "$major_tag" "$tag_name"
+            # Create and push the major tag (pointing to HEAD since we're on the latest commit)
+            git tag -f "$major_tag" HEAD
             git push -f origin "$major_tag"
           done
