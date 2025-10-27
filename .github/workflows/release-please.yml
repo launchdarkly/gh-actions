@@ -8,7 +8,7 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
   id-token: write
   pull-requests: write
 
@@ -31,25 +31,25 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          
+
           # Get the paths that had releases created
           PATHS_RELEASED='${{ steps.release.outputs.paths_released }}'
-          
+
           # Parse the JSON array of released paths
           echo "$PATHS_RELEASED" | jq -r '.[]' | while read -r path; do
             # Get the tag name for this component
             tag_name="${{ steps.release.outputs['${path}--tag_name'] }}"
-            
+
             # Extract component name from tag name (e.g., contract-tests-v1.2.3 -> contract-tests)
             component=$(echo "$tag_name" | sed 's/-v[0-9].*//')
-            
+
             # Get the major version for this component
             major_version="${{ steps.release.outputs['${path}--major'] }}"
-            
+
             # Create component-specific major tag
             major_tag="${component}-v${major_version}"
             echo "Creating major tag: $major_tag for tag: $tag_name"
-            
+
             # Create and push the major tag (pointing to HEAD since we're on the latest commit)
             git tag -f "$major_tag" HEAD
             git push -f origin "$major_tag"
