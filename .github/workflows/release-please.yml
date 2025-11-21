@@ -34,8 +34,8 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # Parse the JSON array of released paths
-          echo "$RELEASE_OUTPUTS" | jq -r '.paths_released[]' | while read -r path; do
+          # Parse the JSON string of released paths (paths_released is a JSON string, not an array)
+          echo "$RELEASE_OUTPUTS" | jq -r '.paths_released | fromjson | .[]' | while read -r path; do
             # Use jq to dynamically look up values using the path variable
             tag_name=$(echo "$RELEASE_OUTPUTS" | jq -r ".[\"${path}--tag_name\"]")
             major_version=$(echo "$RELEASE_OUTPUTS" | jq -r ".[\"${path}--major\"]")
