@@ -27,24 +27,31 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Update major version tags for components
-        if: ${{ steps.release.outputs.releases_created  == 'true'}}
+        if: ${{ steps.release.outputs.releases_created == 'true'}}
+        env:
+          RELEASE_OUTPUTS: ${{ toJson(steps.release.outputs) }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # Get the paths that had releases created
-          PATHS_RELEASED='${{ steps.release.outputs.paths_released }}'
-
-          # Parse the JSON array of released paths
-          echo "$PATHS_RELEASED" | jq -r '.[]' | while read -r path; do
-            # Get the tag name for this component
-            tag_name="${{ steps.release.outputs['${path}--tag_name'] }}"
+          # Parse the JSON string of released paths (paths_released is a JSON string, not an array)
+          echo "$RELEASE_OUTPUTS" | jq -r '.paths_released | fromjson | .[]' | while read -r path; do
+            # Use jq to dynamically look up values using the path variable
+            tag_name=$(echo "$RELEASE_OUTPUTS" | jq -r ".[\"${path}--tag_name\"]")
+            major_version=$(echo "$RELEASE_OUTPUTS" | jq -r ".[\"${path}--major\"]")
+            
+            # Fail if tag_name or major_version are missing (they should always be set for released paths)
+            if [ "$tag_name" = "null" ] || [ -z "$tag_name" ]; then
+              echo "Error: Missing tag_name for path: $path"
+              exit 1
+            fi
+            if [ "$major_version" = "null" ] || [ -z "$major_version" ]; then
+              echo "Error: Missing major_version for path: $path"
+              exit 1
+            fi
 
             # Extract component name from tag name (e.g., contract-tests-v1.2.3 -> contract-tests)
             component=$(echo "$tag_name" | sed 's/-v[0-9].*//')
-
-            # Get the major version for this component
-            major_version="${{ steps.release.outputs['${path}--major'] }}"
 
             # Create component-specific major tag
             major_tag="${component}-v${major_version}"
