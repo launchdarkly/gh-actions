@@ -1,5 +1,5 @@
 name: "Start persistent stores"
-description: 'Runs contract tests against an SDK component.'
+description: "Runs contract tests against an SDK component."
 inputs:
   consul:
     required: false
@@ -13,13 +13,14 @@ inputs:
     required: false
     description: "Whether or not a redis instance should be started."
     default: false
-
-
+  valkey:
+    required: false
+    description: "Whether or not a valkey instance should be started."
+    default: false
 
 runs:
   using: composite
   steps:
-
     #
     # Linux services (using Docker)
     #
@@ -31,7 +32,7 @@ runs:
         # 1.21.5 has a known issue https://github.com/hashicorp/consul/issues/22822 so we need to run 1.21.4 until they fix the issue
         docker run -d --name consul -p 8500:8500 hashicorp/consul:1.21.4
 
-    - name: "DynamoDB for Linux" 
+    - name: "DynamoDB for Linux"
       shell: bash
       if: ${{ inputs.dynamodb == 'true' && runner.os == 'Linux' }}
       run: |
@@ -42,6 +43,12 @@ runs:
       if: ${{ inputs.redis == 'true' && runner.os == 'Linux' }}
       run: |
         docker run -d --name redis -p 6379:6379 redis
+
+    - name: "Valkey for Linux"
+      shell: bash
+      if: ${{ inputs.valkey == 'true' && runner.os == 'Linux' }}
+      run: |
+        docker run -d --name valkey -p 6380:6379 valkey/valkey
 
     #
     # Windows services
@@ -78,6 +85,8 @@ runs:
         choco install redis
         Start-Process redis-server
 
+    # Note: Valkey does not have native Windows support.
+
     #
     # MacOS services
     #
@@ -102,3 +111,10 @@ runs:
       run: |
         brew install redis
         brew services start redis
+
+    - name: "Valkey for MacOS"
+      shell: bash
+      if: ${{ inputs.valkey == 'true' && runner.os == 'MacOS' }}
+      run: |
+        brew install valkey
+        valkey-server --port 6380 --daemonize yes

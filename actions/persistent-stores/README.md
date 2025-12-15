@@ -24,6 +24,7 @@ jobs:
           redis: true
           consul: true
           dynamodb: true
+          valkey: true
 
       - uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests-v1
         with:
@@ -39,3 +40,19 @@ jobs:
 | `consul`   | Whether or not a consul instance should be started.   | `false` |
 | `dynamodb` | Whether or not a dynamodb instance should be started. | `false` |
 | `redis`    | Whether or not a redis instance should be started.    | `false` |
+| `valkey`   | Whether or not a valkey instance should be started.   | `false` |
+
+# Ports
+
+Each persistent store runs on a specific port:
+
+| Service    | Port   |
+|------------|--------|
+| Consul     | `8500` |
+| DynamoDB   | `8000` |
+| Redis      | `6379` |
+| Valkey     | `6380` |
+
+# Platform Support
+
+**Note:** Valkey is only supported on Linux and MacOS. Windows is not currently supported as Valkey does not provide native Windows builds.
