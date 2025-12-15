@@ -17,6 +17,22 @@ inputs:
     required: false
     description: "Whether or not a valkey instance should be started."
     default: false
+  consul_port:
+    required: false
+    description: "The port on which consul should listen."
+    default: "8500"
+  dynamodb_port:
+    required: false
+    description: "The port on which dynamodb should listen."
+    default: "8000"
+  redis_port:
+    required: false
+    description: "The port on which redis should listen."
+    default: "6379"
+  valkey_port:
+    required: false
+    description: "The port on which valkey should listen."
+    default: "6380"
 
 runs:
   using: composite
@@ -30,25 +46,25 @@ runs:
       if: ${{ inputs.consul == 'true' && runner.os == 'Linux' }}
       run: |
         # 1.21.5 has a known issue https://github.com/hashicorp/consul/issues/22822 so we need to run 1.21.4 until they fix the issue
-        docker run -d --name consul -p 8500:8500 hashicorp/consul:1.21.4
+        docker run -d --name consul -p ${{ inputs.consul_port }}:8500 hashicorp/consul:1.21.4
 
     - name: "DynamoDB for Linux"
       shell: bash
       if: ${{ inputs.dynamodb == 'true' && runner.os == 'Linux' }}
       run: |
-        docker run -d --name dynamodb -p 8000:8000 amazon/dynamodb-local
+        docker run -d --name dynamodb -p ${{ inputs.dynamodb_port }}:8000 amazon/dynamodb-local
 
     - name: "Redis for Linux"
       shell: bash
       if: ${{ inputs.redis == 'true' && runner.os == 'Linux' }}
       run: |
-        docker run -d --name redis -p 6379:6379 redis
+        docker run -d --name redis -p ${{ inputs.redis_port }}:6379 redis
 
     - name: "Valkey for Linux"
       shell: bash
       if: ${{ inputs.valkey == 'true' && runner.os == 'Linux' }}
       run: |
-        docker run -d --name valkey -p 6380:6379 valkey/valkey
+        docker run -d --name valkey -p ${{ inputs.valkey_port }}:6379 valkey/valkey
 
     #
     # Windows services
@@ -66,7 +82,7 @@ runs:
       # 1.20.1 until they fix the issue
       run: |
         choco install consul --version=1.20.1
-        Start-Process consul -ArgumentList 'agent',  '-dev'
+        Start-Process consul -ArgumentList 'agent', '-dev', '-http-port=${{ inputs.consul_port }}'
 
     - name: "DynamoDB for Windows"
       shell: powershell
@@ -76,14 +92,14 @@ runs:
         $ProgressPreference = "SilentlyContinue"
         wget "https://s3.us-west-2.amazonaws.com/dynamodb-local/dynamodb_local_latest.zip" -OutFile "./dynamodb-local/dynamodb.zip"
         Expand-Archive -Path ./dynamodb-local/dynamodb.zip -DestinationPath ./dynamodb-local
-        Start-Process java -ArgumentList '-Djava.library.path=./dynamodb-local/DynamoDBLocal_lib', '-jar', './dynamodb-local/DynamoDBLocal.jar', '-sharedDb'
+        Start-Process java -ArgumentList '-Djava.library.path=./dynamodb-local/DynamoDBLocal_lib', '-jar', './dynamodb-local/DynamoDBLocal.jar', '-sharedDb', '-port', '${{ inputs.dynamodb_port }}'
 
     - name: "Redis for Windows"
       shell: powershell
       if: ${{ inputs.redis == 'true' && runner.os == 'Windows' }}
       run: |
         choco install redis
-        Start-Process redis-server
+        Start-Process redis-server -ArgumentList '--port', '${{ inputs.redis_port }}'
 
     # Note: Valkey does not have native Windows support.
 
@@ -96,25 +112,25 @@ runs:
       if: ${{ inputs.consul == 'true' && runner.os == 'MacOS' }}
       run: |
         brew install consul
-        brew services start consul
+        consul agent -dev -http-port=${{ inputs.consul_port }} &
 
     - name: "DynamoDB for MacOS"
       shell: bash
       if: ${{ inputs.dynamodb == 'true' && runner.os == 'MacOS' }}
       run: |
         brew install dynamodb-local
-        nohup dynamodb-local &
+        nohup dynamodb-local -port ${{ inputs.dynamodb_port }} &
 
     - name: "Redis for MacOS"
       shell: bash
       if: ${{ inputs.redis == 'true' && runner.os == 'MacOS' }}
       run: |
         brew install redis
-        brew services start redis
+        redis-server --port ${{ inputs.redis_port }} --daemonize yes
 
     - name: "Valkey for MacOS"
       shell: bash
       if: ${{ inputs.valkey == 'true' && runner.os == 'MacOS' }}
       run: |
         brew install valkey
-        valkey-server --port 6380 --daemonize yes
+        valkey-server --port ${{ inputs.valkey_port }} --daemonize yes
