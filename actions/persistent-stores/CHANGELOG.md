@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/launchdarkly/gh-actions/compare/persistent-stores-v0.1.2...persistent-stores-v0.2.0) (2025-12-16)
+
+
+### Features
+
+* Add support for Valkey ([#71](https://github.com/launchdarkly/gh-actions/issues/71)) ([9148bca](https://github.com/launchdarkly/gh-actions/commit/9148bcae9ae2381f369d6b8adcb9f4f8c6a367d5))
+
 ## [0.1.2](https://github.com/launchdarkly/gh-actions/compare/persistent-stores-v0.1.1...persistent-stores-v0.1.2) (2025-10-27)
 
 
