@@ -36,6 +36,10 @@ inputs:
     description: "Github token; if provided will avoid ratelimiting."
     required: false
     default: ''
+  stop_service:
+    description: "Whether or not to send a 'stop' command to signal shutdown."
+    required: false
+    default: true
 
 
 
@@ -51,4 +55,4 @@ runs:
         # The token is then passed to the downloader script itself, so it can perform more API requests and hopefully avoid rate limiting again.
         GITHUB_TOKEN: ${{ inputs.token }}
         VERSION: ${{ inputs.version }}
-        PARAMS: -url http://localhost:${{ inputs.test_service_port }} -port ${{ inputs.test_harness_port }} ${{ inputs.extra_params }} ${{ inputs.enable_persistence_tests == 'true' && '-enable-persistence-tests' || '' }} ${{ inputs.debug_logging == 'true' && '-debug' || '' }} -stop-service-at-end
+        PARAMS: -url http://localhost:${{ inputs.test_service_port }} -port ${{ inputs.test_harness_port }} ${{ inputs.extra_params }} ${{ inputs.enable_persistence_tests == 'true' && '-enable-persistence-tests' || '' }} ${{ inputs.debug_logging == 'true' && '-debug' || '' }} ${{ inputs.stop_service == 'true' && '-stop-service-at-end' || '' }}

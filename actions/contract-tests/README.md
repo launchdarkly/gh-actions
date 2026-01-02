@@ -47,5 +47,6 @@ jobs:
 | `debug_logging`            | Whether the test harness should emit debug logs            | `false`                            |
 | `extra_params`             | Any other params that should be passed to the test harness | None.                              |
 | `token`                    | Github token, if available. Helps avoid ratelimiting.      | None.                              |
+ `stop_service`             | Whether to send a 'stop' request to signal shutdown.       | `true`                             |
 
 [1] For Server-Sent-Event tests, use [`sse-contract-tests`](https://github.com/launchdarkly/sse-contract-tests).
