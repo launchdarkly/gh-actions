@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/launchdarkly/gh-actions/compare/contract-tests-v1.2.0...contract-tests-v1.3.0) (2026-01-02)
+
+
+### Features
+
+* Control whether or not to run with "-stop-service-at-end" ([#73](https://github.com/launchdarkly/gh-actions/issues/73)) ([59238b0](https://github.com/launchdarkly/gh-actions/commit/59238b06a9afaefb71c9cc907f749c182cd4f4b7))
+
 ## [1.2.0](https://github.com/launchdarkly/gh-actions/compare/contract-tests-v1.1.0...contract-tests-v1.2.0) (2024-10-31)
 
 
