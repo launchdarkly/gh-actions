@@ -34,7 +34,7 @@ runs:
         echo "PKCS11_CONFIG=/tmp/DigiCert One Signing Manager Tools/smtools-linux-x64/pkcs11properties.cfg" >> "$GITHUB_ENV"
 
     - name: Configure Digicert Secure Software Manager
-      uses: digicert/ssm-code-signing@v0.0.2
+      uses: digicert/ssm-code-signing@25dffce7023e3656c5ca688f96a2d7f3129fe2c0 # v0.0.2
       env:
         SM_API_KEY: ${{ env.DIGICERT_API_KEY }}
         SM_CLIENT_CERT_PASSWORD: ${{ env.DIGICERT_CLIENT_CERT_PASSWORD }}
