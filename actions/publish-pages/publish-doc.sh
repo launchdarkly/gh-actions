@@ -14,7 +14,7 @@ fi
 
 # Grep returns a non-zero exit code for no matches, so we want to ingore it.
 set +e
-existing_doc=$(git ls-files | grep -c "$OUT_PATH")
+existing_doc=$(git ls-files | grep -c "^$OUT_PATH/")
 set -e
 
 if [ "$existing_doc" != "0" ]; then
