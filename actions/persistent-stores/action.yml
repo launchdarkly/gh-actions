@@ -82,7 +82,33 @@ runs:
       # 1.20.1 until they fix the issue
       run: |
         choco install consul --version=1.20.1
+
+        # The chocolatey package registers Consul as a Windows service which
+        # races with the dev agent for port binding. Stop and disable it.
+        Stop-Service consul -ErrorAction SilentlyContinue
+        Set-Service consul -StartupType Disabled -ErrorAction SilentlyContinue
+
         Start-Process consul -ArgumentList 'agent', '-dev', '-http-port=${{ inputs.consul_port }}'
+
+        # Wait for the dev agent to complete Raft leader election.
+        $timeout = 30
+        $elapsed = 0
+        while ($elapsed -lt $timeout) {
+          try {
+            $response = Invoke-RestMethod -Uri 'http://127.0.0.1:${{ inputs.consul_port }}/v1/status/leader' -TimeoutSec 2
+            if ($response -and $response -ne '""') {
+              Write-Host "Consul is ready (leader: $response)"
+              break
+            }
+          } catch {}
+          Write-Host "Waiting for Consul to elect a leader... ($elapsed/$timeout seconds)"
+          Start-Sleep -Seconds 1
+          $elapsed++
+        }
+        if ($elapsed -eq $timeout) {
+          Write-Error "Consul did not become ready within $timeout seconds"
+          exit 1
+        }
 
     - name: "DynamoDB for Windows"
       shell: powershell
