@@ -21,6 +21,10 @@ inputs:
     description: 'Recurse mode suitable for mono-repos.'
     required: false
     default: 'true'
+  omit-optional:
+    description: 'omit optional dependencies'
+    required: false
+    default: 'false'
 
 runs:
   using: composite
@@ -56,6 +60,7 @@ runs:
         args+=(-t "$type")
       done
       [[ "${{ inputs.recurse }}" != true ]] && args+=(--no-recurse)
+      [[ "${{ inputs.omit-optional }}" == true ]] && args+=(--omit optional)
       cdxgen "${args[@]}" -o "${{ steps.info.outputs.bom_file }}" ${{ inputs.project-directory }}
     env:
       FETCH_LICENSE: ${{ inputs.fetch-license }}
