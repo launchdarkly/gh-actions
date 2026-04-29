@@ -24,6 +24,8 @@ description: |
             - uses: actions/checkout@v4
             - uses: launchdarkly/gh-actions/actions/sync-snippets@main
               with:
+                entrypoints: |
+                  static/ld/components/getStarted
                 github-token: ${{ secrets.GITHUB_TOKEN }}
 
 inputs:
@@ -40,6 +42,16 @@ inputs:
       uses TSX render markers); future targets (e.g. `ld-docs`) plug in here.
     required: false
     default: 'ld-application'
+  entrypoints:
+    description: |
+      Newline-separated list of consumer-checkout directories the renderer
+      should walk for snippet markers. Paths are resolved relative to
+      $GITHUB_WORKSPACE (so a top-level `static/ld/components/getStarted` is
+      what gonfalon would pass). Each line becomes one `--entrypoint=` flag
+      to the CLI; the CLI walks each recursively, opens files with extensions
+      it understands (.tsx/.jsx/.ts/.js/.mdx), and skips junk dirs
+      (node_modules, .git, dist, build, ...).
+    required: true
   branch:
     description: 'Branch the action commits the rendered diff to.'
     required: false
@@ -173,12 +185,30 @@ runs:
 
     # 6. Render against the consumer checkout. `snippets` is now on $PATH.
     #    The CLI loads the canonical sdks/ tree from the binary's embedded FS
-    #    — no separate snippet sources to fetch.
+    #    — no separate snippet sources to fetch. Each line of the
+    #    `entrypoints:` input becomes one `--entrypoint=` flag (relative paths
+    #    resolve against $GITHUB_WORKSPACE).
     - name: 'Render snippets'
       shell: bash
+      env:
+        ENTRYPOINTS: ${{ inputs.entrypoints }}
       run: |
+        set -euo pipefail
         snippets version
-        snippets render --target='${{ inputs.target }}' --out="$GITHUB_WORKSPACE"
+        cd "$GITHUB_WORKSPACE"
+        args=()
+        while IFS= read -r line; do
+          # Strip surrounding whitespace; skip empty lines.
+          line="${line#"${line%%[![:space:]]*}"}"
+          line="${line%"${line##*[![:space:]]}"}"
+          [ -z "$line" ] && continue
+          args+=("--entrypoint=$line")
+        done <<< "$ENTRYPOINTS"
+        if [ ${#args[@]} -eq 0 ]; then
+          echo "::error::sync-snippets: at least one non-empty entrypoint must be provided"
+          exit 1
+        fi
+        snippets render --target="${{ inputs.target }}" "${args[@]}"
 
     # 7. Detect whether render touched anything. Empty diff means the consumer
     #    is already current; we exit cleanly with no PR.

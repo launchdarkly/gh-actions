@@ -27,6 +27,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: launchdarkly/gh-actions/actions/sync-snippets@main
         with:
+          entrypoints: |
+            static/ld/components/getStarted
           github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
@@ -35,13 +37,14 @@ jobs:
 1. Resolves the latest `snippets/vX.Y.Z` GitHub Release on `launchdarkly/sdk-meta` (override with `version:` if you need to pin or roll back).
 2. Downloads the platform-specific binary archive plus the cosign signature and certificate.
 3. Verifies the signature is keyless-signed by `launchdarkly/sdk-meta`'s `release-please` workflow on `main` via GitHub OIDC.
-4. Runs `snippets render --target=<adapter> --out=$GITHUB_WORKSPACE`. The binary embeds the canonical `sdks/` tree at build time — no separate snippet fetch.
+4. Runs `snippets render --target=<adapter> --entrypoint=<dir>...` with one `--entrypoint` flag per non-empty line of the `entrypoints:` input. The binary embeds the canonical `sdks/` tree at build time — no separate snippet fetch. The renderer walks each entrypoint recursively, picks up files with extensions it understands (`.tsx`/`.jsx`/`.ts`/`.js`/`.mdx`) that contain the `SDK_SNIPPET:RENDER:` sentinel, and skips junk dirs (`node_modules`, `.git`, `dist`, `build`, ...).
 5. Opens (or updates) a pull request with the rewritten files. If `render` produced no diff, the action exits 0 without opening a PR.
 
 ## Inputs
 
 | Name | Default | Description |
 |---|---|---|
+| `entrypoints` | (required) | Newline-separated list of consumer-checkout directories the renderer should walk for snippet markers. Paths resolve against `$GITHUB_WORKSPACE`. |
 | `version` | `latest` | Release tag to install (e.g. `snippets/v0.3.0`). `latest` resolves to the most recent published `snippets/*` release. |
 | `target` | `ld-application` | Adapter target. `ld-application` for gonfalon. Future targets (e.g. `ld-docs`) plug in here. |
 | `branch` | `chore/sync-sdk-snippets` | Branch the action commits the rendered diff to. |
