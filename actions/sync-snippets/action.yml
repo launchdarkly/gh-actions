@@ -11,21 +11,10 @@ description: |
   compromised release token can't substitute a different binary without
   also faking the OIDC claim issued at build time.
 
-  Consumer-side wiring:
-
-      jobs:
-        sync:
-          runs-on: ubuntu-latest
-          permissions:
-            contents: write
-            pull-requests: write
-          steps:
-            - uses: actions/checkout@v4
-            - uses: launchdarkly/gh-actions/actions/sync-snippets@main
-              with:
-                entrypoints: |
-                  static/ld/components/getStarted
-                github-token: ${{ secrets.GITHUB_TOKEN }}
+  See actions/sync-snippets/README.md for a full consumer-side workflow
+  example. The action needs `contents: write` and `pull-requests: write`
+  permissions and the consumer's `GITHUB_TOKEN` passed via the
+  `github-token` input.
 
 inputs:
   version:
