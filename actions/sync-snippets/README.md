@@ -18,7 +18,6 @@ on:
 permissions:
   contents: write
   pull-requests: write
-  id-token: write              # required for cosign keyless verification
 
 jobs:
   sync:
@@ -35,8 +34,8 @@ jobs:
 ## What it does
 
 1. Resolves the latest `snippets/vX.Y.Z` GitHub Release on `launchdarkly/sdk-meta` (override with `version:` if you need to pin or roll back).
-2. Downloads the platform-specific binary archive plus the cosign signature and certificate.
-3. Verifies the signature is keyless-signed by `launchdarkly/sdk-meta`'s `release-please` workflow on `main` via GitHub OIDC.
+2. Downloads the platform-specific binary archive from the release.
+3. Verifies the SLSA build-provenance attestation issued by `launchdarkly/sdk-meta`'s `release-please` workflow via `gh attestation verify`.
 4. Runs `snippets render --target=<adapter> --entrypoint=<dir>...` with one `--entrypoint` flag per non-empty line of the `entrypoints:` input. The binary embeds the canonical `sdks/` tree at build time — no separate snippet fetch. The renderer walks each entrypoint recursively, picks up files with extensions it understands (`.tsx`/`.jsx`/`.ts`/`.js`/`.mdx`) that contain the `SDK_SNIPPET:RENDER:` sentinel, and skips junk dirs (`node_modules`, `.git`, `dist`, `build`, ...).
 5. Opens (or updates) a pull request with the rewritten files. If `render` produced no diff, the action exits 0 without opening a PR.
 
@@ -63,6 +62,6 @@ jobs:
 
 ## How the supply chain is locked down
 
-- **Signing identity is pinned to a specific workflow path.** `cosign verify-blob` checks `--certificate-identity-regexp` against `https://github.com/launchdarkly/sdk-meta/.github/workflows/release-please.yml@.+`. A token leaked from any other workflow in any other repo cannot produce a matching OIDC claim.
-- **No long-lived signing keys.** Each release signs itself using GitHub's OIDC token, so there is nothing to rotate, store, or accidentally check in.
+- **Signing identity is pinned to a specific workflow path.** `gh attestation verify --signer-workflow launchdarkly/sdk-meta/.github/workflows/release-please.yml` checks the SLSA build-provenance subject against that exact workflow file. A token leaked from any other workflow in any other repo cannot produce a matching OIDC claim.
+- **No long-lived signing keys.** Each release attests itself using GitHub's OIDC token, so there is nothing to rotate, store, or accidentally check in. The attestation is published to `launchdarkly/sdk-meta`'s repo-level attestation store, not as a release asset.
 - **Snippet sources travel with the binary.** The CLI's `--sdks=` flag is optional; when omitted (the default for this action) it reads from `embed.FS`. Pinning a release version pins both the engine and the snippet content atomically.

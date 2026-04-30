@@ -5,11 +5,11 @@ description: |
   updates a sync pull request when the rendered output differs from `main`.
 
   The action is a thin wrapper around the `snippets` CLI. The CLI binary is
-  downloaded from sdk-meta's GitHub Releases as a cosign-signed artifact;
-  signing is keyless (GitHub OIDC) and verification pins the signing identity
-  to launchdarkly/sdk-meta's own `release-please` workflow, so a compromised
-  release token can't substitute a different binary without also faking the
-  OIDC claim.
+  downloaded from sdk-meta's GitHub Releases and verified against a
+  GitHub-issued SLSA build provenance attestation; verification pins the
+  signing workflow to launchdarkly/sdk-meta's `release-please.yml`, so a
+  compromised release token can't substitute a different binary without
+  also faking the OIDC claim issued at build time.
 
   Consumer-side wiring:
 
@@ -19,7 +19,6 @@ description: |
           permissions:
             contents: write
             pull-requests: write
-            id-token: write   # for cosign keyless verification
           steps:
             - uses: actions/checkout@v4
             - uses: launchdarkly/gh-actions/actions/sync-snippets@main
@@ -115,9 +114,9 @@ runs:
         echo "tag=$tag" >> "$GITHUB_OUTPUT"
         echo "Using snippets release: $tag"
 
-    # 2. Resolve the platform's archive name. goreleaser names archives
-    #    snippets_<version>_<os>_<arch>.tar.gz, where <version> is the
-    #    bare semver (the `snippets/` tag prefix is stripped).
+    # 2. Resolve the platform's archive name. The release workflow names
+    #    archives snippets_<version>_<os>_<arch>.tar.gz, where <version> is
+    #    the bare semver (the `snippets/` tag prefix is stripped).
     - id: archive
       name: 'Resolve archive filename'
       shell: bash
@@ -138,9 +137,10 @@ runs:
         archive="snippets_${version}_${os}_${arch}.tar.gz"
         echo "archive=$archive" >> "$GITHUB_OUTPUT"
 
-    # 3. Pull the archive, its detached signature, and the OIDC certificate
-    #    from the GitHub Release.
-    - name: 'Download release assets'
+    # 3. Pull the archive from the GitHub Release. Attestations are
+    #    fetched separately by `gh attestation verify` from sdk-meta's
+    #    repo-level attestations — they aren't release assets.
+    - name: 'Download release archive'
       shell: bash
       working-directory: ${{ runner.temp }}
       env:
@@ -150,27 +150,23 @@ runs:
         gh release download "${{ steps.resolve.outputs.tag }}" \
           --repo launchdarkly/sdk-meta \
           --pattern "${{ steps.archive.outputs.archive }}" \
-          --pattern "${{ steps.archive.outputs.archive }}.sig" \
-          --pattern "${{ steps.archive.outputs.archive }}.pem" \
           --clobber
 
-    # 4. Install cosign and verify the signature. The identity regex pins
-    #    the signer to sdk-meta's release-please workflow on the main branch
-    #    — a token leaked from any other workflow couldn't produce a matching
-    #    OIDC claim.
-    - uses: sigstore/cosign-installer@d7d6bc7722e3daa8354c50bcb52f4837da5e9b6a # v3.7.0
-    - name: 'Verify signature'
+    # 4. Verify the SLSA build-provenance attestation. `--signer-workflow`
+    #    pins the signing workflow to sdk-meta's release-please.yml — a
+    #    token leaked from any other workflow couldn't produce a matching
+    #    OIDC claim. `gh` ships preinstalled on every GitHub-hosted
+    #    runner, so no separate install step is required.
+    - name: 'Verify attestation'
       shell: bash
       working-directory: ${{ runner.temp }}
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
       run: |
         set -euo pipefail
-        archive="${{ steps.archive.outputs.archive }}"
-        cosign verify-blob \
-          --certificate "${archive}.pem" \
-          --signature   "${archive}.sig" \
-          --certificate-identity-regexp 'https://github\.com/launchdarkly/sdk-meta/\.github/workflows/release-please\.yml@.+' \
-          --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \
-          "$archive"
+        gh attestation verify "${{ steps.archive.outputs.archive }}" \
+          --repo launchdarkly/sdk-meta \
+          --signer-workflow launchdarkly/sdk-meta/.github/workflows/release-please.yml
 
     # 5. Extract the CLI and stage it on $PATH for the render step.
     - name: 'Install CLI'
