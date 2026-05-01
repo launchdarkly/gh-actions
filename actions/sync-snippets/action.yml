@@ -80,8 +80,13 @@ runs:
   using: composite
   steps:
     # 1. Resolve the version. `latest` queries the GitHub API for the most
-    #    recent release whose tag starts with `snippets/`. Any other value is
-    #    used verbatim — caller pins, action obeys.
+    #    recent published release whose tag starts with `snippets/`. Drafts
+    #    and pre-releases are excluded — drafts especially matter because
+    #    sdk-meta's release pipeline cuts a draft, uploads assets, then
+    #    flips it to published. A `latest` query that catches the draft
+    #    window would point at a release whose assets and attestations may
+    #    not have been uploaded yet. Any non-`latest` value is used
+    #    verbatim — caller pins, action obeys.
     - id: resolve
       name: 'Resolve snippets release tag'
       shell: bash
@@ -91,10 +96,11 @@ runs:
         set -euo pipefail
         if [ "${{ inputs.version }}" = "latest" ]; then
           tag=$(gh release list --repo launchdarkly/sdk-meta --limit 100 \
+                  --exclude-drafts --exclude-pre-releases \
                   --json tagName --jq '.[] | .tagName | select(startswith("snippets/"))' \
                 | head -n 1)
           if [ -z "$tag" ]; then
-            echo "::error::no snippets/* release found in launchdarkly/sdk-meta"
+            echo "::error::no published snippets/* release found in launchdarkly/sdk-meta"
             exit 1
           fi
         else
