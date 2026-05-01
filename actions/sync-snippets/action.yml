@@ -1,0 +1,236 @@
+name: 'Sync SDK Snippets'
+description: |
+  Pulls the canonical SDK code snippets from the latest sdk-meta `snippets/` release
+  into the current consumer checkout (gonfalon, ld-docs-private), then opens or
+  updates a sync pull request when the rendered output differs from `main`.
+
+  The action is a thin wrapper around the `snippets` CLI. The CLI binary is
+  downloaded from sdk-meta's GitHub Releases and verified against a
+  GitHub-issued SLSA build provenance attestation; verification pins the
+  signing workflow to launchdarkly/sdk-meta's `release-please.yml`, so a
+  compromised release token can't substitute a different binary without
+  also faking the OIDC claim issued at build time.
+
+  See actions/sync-snippets/README.md for a full consumer-side workflow
+  example. The action needs `contents: write` and `pull-requests: write`
+  permissions and the consumer's `GITHUB_TOKEN` passed via the
+  `github-token` input.
+
+inputs:
+  version:
+    description: |
+      Release tag to install, e.g. `snippets/v0.3.0`. The default `latest`
+      resolves to the most recent published release whose tag begins with
+      `snippets/`.
+    required: false
+    default: 'latest'
+  target:
+    description: |
+      Adapter target. `ld-application` for gonfalon (and any other consumer that
+      uses TSX render markers); future targets (e.g. `ld-docs`) plug in here.
+    required: false
+    default: 'ld-application'
+  entrypoints:
+    description: |
+      Newline-separated list of consumer-checkout directories the renderer
+      should walk for snippet markers. Paths are resolved relative to
+      $GITHUB_WORKSPACE (so a top-level `static/ld/components/getStarted` is
+      what gonfalon would pass). Each line becomes one `--entrypoint=` flag
+      to the CLI; the CLI walks each recursively, opens files with extensions
+      it understands (.tsx/.jsx/.ts/.js/.mdx), and skips junk dirs
+      (node_modules, .git, dist, build, ...).
+    required: true
+  branch:
+    description: 'Branch the action commits the rendered diff to.'
+    required: false
+    default: 'chore/sync-sdk-snippets'
+  pr-title:
+    description: 'Pull-request title.'
+    required: false
+    default: 'chore: sync SDK snippets'
+  pr-body:
+    description: |
+      Pull-request body. The default points at the upstream release notes for
+      the version being synced.
+    required: false
+    default: ''
+  pr-labels:
+    description: 'Comma-separated labels applied to the sync PR.'
+    required: false
+    default: 'sdk-snippets,automated-pr'
+  github-token:
+    description: |
+      Token used to download release assets and open the PR. Needs `contents:
+      write` and `pull-requests: write` on the consumer repo. The repo's default
+      `GITHUB_TOKEN` is sufficient.
+    required: true
+
+outputs:
+  version:
+    description: 'The sdk-meta snippets release tag that was actually installed.'
+    value: ${{ steps.resolve.outputs.tag }}
+  changes:
+    description: 'true if `snippets render` produced any diff against the working tree.'
+    value: ${{ steps.diff.outputs.changes }}
+  pr-number:
+    description: 'Pull-request number when a sync PR was opened or updated; empty otherwise.'
+    value: ${{ steps.cpr.outputs.pull-request-number }}
+
+runs:
+  using: composite
+  steps:
+    # 1. Resolve the version. `latest` queries the GitHub API for the most
+    #    recent published release whose tag starts with `snippets/`. Drafts
+    #    and pre-releases are excluded — drafts especially matter because
+    #    sdk-meta's release pipeline cuts a draft, uploads assets, then
+    #    flips it to published. A `latest` query that catches the draft
+    #    window would point at a release whose assets and attestations may
+    #    not have been uploaded yet. Any non-`latest` value is used
+    #    verbatim — caller pins, action obeys.
+    - id: resolve
+      name: 'Resolve snippets release tag'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+      run: |
+        set -euo pipefail
+        if [ "${{ inputs.version }}" = "latest" ]; then
+          tag=$(gh release list --repo launchdarkly/sdk-meta --limit 100 \
+                  --exclude-drafts --exclude-pre-releases \
+                  --json tagName --jq '.[] | .tagName | select(startswith("snippets/"))' \
+                | head -n 1)
+          if [ -z "$tag" ]; then
+            echo "::error::no published snippets/* release found in launchdarkly/sdk-meta"
+            exit 1
+          fi
+        else
+          tag="${{ inputs.version }}"
+        fi
+        echo "tag=$tag" >> "$GITHUB_OUTPUT"
+        echo "Using snippets release: $tag"
+
+    # 2. Resolve the platform's archive name. The release workflow names
+    #    archives snippets_<version>_<os>_<arch>.tar.gz, where <version> is
+    #    the bare semver (the `snippets/` tag prefix is stripped).
+    - id: archive
+      name: 'Resolve archive filename'
+      shell: bash
+      run: |
+        set -euo pipefail
+        case "$RUNNER_OS" in
+          Linux)  os=linux ;;
+          macOS)  os=darwin ;;
+          *) echo "::error::unsupported runner OS: $RUNNER_OS"; exit 1 ;;
+        esac
+        case "$RUNNER_ARCH" in
+          X64)   arch=amd64 ;;
+          ARM64) arch=arm64 ;;
+          *) echo "::error::unsupported runner arch: $RUNNER_ARCH"; exit 1 ;;
+        esac
+        version="${{ steps.resolve.outputs.tag }}"
+        version="${version#snippets/v}"
+        archive="snippets_${version}_${os}_${arch}.tar.gz"
+        echo "archive=$archive" >> "$GITHUB_OUTPUT"
+
+    # 3. Pull the archive from the GitHub Release. Attestations are
+    #    fetched separately by `gh attestation verify` from sdk-meta's
+    #    repo-level attestations — they aren't release assets.
+    - name: 'Download release archive'
+      shell: bash
+      working-directory: ${{ runner.temp }}
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+      run: |
+        set -euo pipefail
+        gh release download "${{ steps.resolve.outputs.tag }}" \
+          --repo launchdarkly/sdk-meta \
+          --pattern "${{ steps.archive.outputs.archive }}" \
+          --clobber
+
+    # 4. Verify the SLSA build-provenance attestation. `--signer-workflow`
+    #    pins the signing workflow to sdk-meta's release-please.yml — a
+    #    token leaked from any other workflow couldn't produce a matching
+    #    OIDC claim. `gh` ships preinstalled on every GitHub-hosted
+    #    runner, so no separate install step is required.
+    - name: 'Verify attestation'
+      shell: bash
+      working-directory: ${{ runner.temp }}
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+      run: |
+        set -euo pipefail
+        gh attestation verify "${{ steps.archive.outputs.archive }}" \
+          --repo launchdarkly/sdk-meta \
+          --signer-workflow launchdarkly/sdk-meta/.github/workflows/release-please.yml
+
+    # 5. Extract the CLI and stage it on $PATH for the render step.
+    - name: 'Install CLI'
+      shell: bash
+      working-directory: ${{ runner.temp }}
+      run: |
+        set -euo pipefail
+        mkdir -p bin
+        tar -xzf "${{ steps.archive.outputs.archive }}" -C bin snippets
+        chmod +x bin/snippets
+        echo "$PWD/bin" >> "$GITHUB_PATH"
+
+    # 6. Render against the consumer checkout. `snippets` is now on $PATH.
+    #    The CLI loads the canonical sdks/ tree from the binary's embedded FS
+    #    — no separate snippet sources to fetch. Each line of the
+    #    `entrypoints:` input becomes one `--entrypoint=` flag (relative paths
+    #    resolve against $GITHUB_WORKSPACE).
+    - name: 'Render snippets'
+      shell: bash
+      env:
+        ENTRYPOINTS: ${{ inputs.entrypoints }}
+      run: |
+        set -euo pipefail
+        snippets version
+        cd "$GITHUB_WORKSPACE"
+        args=()
+        while IFS= read -r line; do
+          # Strip surrounding whitespace; skip empty lines.
+          line="${line#"${line%%[![:space:]]*}"}"
+          line="${line%"${line##*[![:space:]]}"}"
+          [ -z "$line" ] && continue
+          args+=("--entrypoint=$line")
+        done <<< "$ENTRYPOINTS"
+        if [ ${#args[@]} -eq 0 ]; then
+          echo "::error::sync-snippets: at least one non-empty entrypoint must be provided"
+          exit 1
+        fi
+        snippets render --target="${{ inputs.target }}" "${args[@]}"
+
+    # 7. Detect whether render touched anything. Empty diff means the consumer
+    #    is already current; we exit cleanly with no PR.
+    - id: diff
+      name: 'Check for changes'
+      shell: bash
+      run: |
+        set -euo pipefail
+        if [ -n "$(git status --porcelain)" ]; then
+          echo "changes=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "changes=false" >> "$GITHUB_OUTPUT"
+          echo "Consumer tree is already in sync with ${{ steps.resolve.outputs.tag }}."
+        fi
+
+    # 8. Open or update a PR with the rendered diff. peter-evans/create-pull-
+    #    request handles both cases: pushes to the same branch, force-updates
+    #    on collisions, and leaves an existing PR alone if the diff is
+    #    identical to what's already proposed.
+    - id: cpr
+      name: 'Open or update sync PR'
+      if: steps.diff.outputs.changes == 'true'
+      uses: peter-evans/create-pull-request@67ccf781d68cd99b580ae25a5c18a1cc84ffff1f # v7.0.6
+      with:
+        token: ${{ inputs.github-token }}
+        commit-message: 'chore: sync SDK snippets to ${{ steps.resolve.outputs.tag }}'
+        branch: ${{ inputs.branch }}
+        delete-branch: true
+        title: ${{ inputs.pr-title }}
+        body: |
+          ${{ inputs.pr-body != '' && inputs.pr-body || format('Syncs SDK snippets from upstream release [`{0}`](https://github.com/launchdarkly/sdk-meta/releases/tag/{0}).', steps.resolve.outputs.tag) }}
+
+          Generated by `launchdarkly/gh-actions/actions/sync-snippets@main`.
+        labels: ${{ inputs.pr-labels }}
