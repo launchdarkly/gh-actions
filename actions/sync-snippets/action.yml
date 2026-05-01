@@ -110,10 +110,16 @@ runs:
       run: |
         set -euo pipefail
         if [ "${{ inputs.version }}" = "latest" ]; then
+          # Picking the first match inside jq instead of `… | head -n 1`
+          # avoids a SIGPIPE race: under `set -o pipefail`, `head` closing
+          # the pipe early causes `gh` to exit 141 on its next write,
+          # which fails the step intermittently depending on output
+          # buffering. `first // empty` returns "" cleanly when nothing
+          # matches.
           tag=$(gh release list --repo launchdarkly/sdk-meta --limit 100 \
                   --exclude-drafts --exclude-pre-releases \
-                  --json tagName --jq '.[] | .tagName | select(startswith("snippets/"))' \
-                | head -n 1)
+                  --json tagName \
+                  --jq 'map(.tagName | select(startswith("snippets/"))) | first // empty')
           if [ -z "$tag" ]; then
             echo "::error::no published snippets/* release found in launchdarkly/sdk-meta"
             exit 1
