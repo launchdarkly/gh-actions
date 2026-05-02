@@ -20,14 +20,25 @@ permissions:
   pull-requests: write
 
 jobs:
-  sync:
+  sync-tsx:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: launchdarkly/gh-actions/actions/sync-snippets@main
         with:
+          target: ld-application
           entrypoints: |
             static/ld/components/getStarted
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  sync-raw:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: launchdarkly/gh-actions/actions/sync-snippets@main
+        with:
+          target: raw-files
+          manifest: packages/sdk-info/extract.yaml
           github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
@@ -36,16 +47,19 @@ jobs:
 1. Resolves the latest `snippets/vX.Y.Z` GitHub Release on `launchdarkly/sdk-meta` (override with `version:` if you need to pin or roll back).
 2. Downloads the platform-specific binary archive from the release.
 3. Verifies the SLSA build-provenance attestation issued by `launchdarkly/sdk-meta`'s `release-please` workflow via `gh attestation verify`.
-4. Runs `snippets render --target=<adapter> --entrypoint=<dir>...` with one `--entrypoint` flag per non-empty line of the `entrypoints:` input. The binary embeds the canonical `sdks/` tree at build time — no separate snippet fetch. The renderer walks each entrypoint recursively, picks up files with extensions it understands (`.tsx`/`.jsx`/`.ts`/`.js`/`.mdx`) that contain the `SDK_SNIPPET:RENDER:` sentinel, and skips junk dirs (`node_modules`, `.git`, `dist`, `build`, ...).
+4. Runs `snippets render` against the consumer checkout. Two modes:
+   - **Marker-driven** (`target=ld-application` or `target=ld-docs`) — passes one `--entrypoint=<dir>` flag per non-empty line of `entrypoints:`. The renderer walks each directory recursively, picks up files with extensions it understands (`.tsx`/`.jsx`/`.ts`/`.js`/`.mdx`) that contain the `SDK_SNIPPET:RENDER:` sentinel, and rewrites the marked region.
+   - **Manifest-driven** (`target=raw-files`) — passes `--manifest=<path>` pointing at a YAML the consumer commits. Each `{id, path}` entry extracts a snippet body and writes it to `<manifest.out>/<path>`. Used by consumers that import snippet text via Vite `?raw` (e.g. gonfalon's `packages/sdk-info/`).
 5. Opens (or updates) a pull request with the rewritten files. If `render` produced no diff, the action exits 0 without opening a PR.
 
 ## Inputs
 
 | Name | Default | Description |
 |---|---|---|
-| `entrypoints` | (required) | Newline-separated list of consumer-checkout directories the renderer should walk for snippet markers. Paths resolve against `$GITHUB_WORKSPACE`. |
+| `target` | `ld-application` | Adapter target: `ld-application` (gonfalon TSX markers), `ld-docs` (ld-docs-private MDX markers), or `raw-files` (manifest-driven flat-file output). |
+| `entrypoints` | `''` | (Required for `target=ld-application` and `target=ld-docs`.) Newline-separated list of consumer-checkout directories the renderer should walk for snippet markers. Paths resolve against `$GITHUB_WORKSPACE`. Ignored for `target=raw-files`. |
+| `manifest` | `''` | (Required for `target=raw-files`.) Path to a raw-files manifest YAML, relative to `$GITHUB_WORKSPACE`. Ignored for marker-driven targets. |
 | `version` | `latest` | Release tag to install (e.g. `snippets/v0.3.0`). `latest` resolves to the most recent published `snippets/*` release. |
-| `target` | `ld-application` | Adapter target. `ld-application` for gonfalon. Future targets (e.g. `ld-docs`) plug in here. |
 | `branch` | `chore/sync-sdk-snippets` | Branch the action commits the rendered diff to. |
 | `pr-title` | `chore: sync SDK snippets` | Pull-request title. |
 | `pr-body` | (auto-generated) | Pull-request body. Defaults to a one-liner pointing at the upstream release notes. |
