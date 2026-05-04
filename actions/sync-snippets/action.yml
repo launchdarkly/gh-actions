@@ -26,8 +26,11 @@ inputs:
     default: 'latest'
   target:
     description: |
-      Adapter target. `ld-application` for gonfalon (and any other consumer that
-      uses TSX render markers); future targets (e.g. `ld-docs`) plug in here.
+      Adapter target. `ld-application` for gonfalon's TSX render markers,
+      `ld-docs` for ld-docs-private's MDX markers, `raw-files` for consumers
+      that import snippet text via Vite `?raw` (e.g. gonfalon's
+      `packages/sdk-info/`). Marker-driven targets (`ld-application`,
+      `ld-docs`) take `entrypoints:`; `raw-files` takes `manifest:`.
     required: false
     default: 'ld-application'
   entrypoints:
@@ -39,7 +42,19 @@ inputs:
       to the CLI; the CLI walks each recursively, opens files with extensions
       it understands (.tsx/.jsx/.ts/.js/.mdx), and skips junk dirs
       (node_modules, .git, dist, build, ...).
-    required: true
+
+      Required for `target=ld-application` and `target=ld-docs`. Ignored for
+      `target=raw-files` (use `manifest:` instead).
+    required: false
+    default: ''
+  manifest:
+    description: |
+      Path to a raw-files manifest YAML, relative to $GITHUB_WORKSPACE. The
+      manifest enumerates the snippet IDs to extract and where to write each
+      one (see the `raw-files` adapter docs in launchdarkly/sdk-meta). Used
+      only when `target=raw-files`; ignored otherwise.
+    required: false
+    default: ''
   branch:
     description: 'Branch the action commits the rendered diff to.'
     required: false
@@ -95,10 +110,16 @@ runs:
       run: |
         set -euo pipefail
         if [ "${{ inputs.version }}" = "latest" ]; then
+          # Picking the first match inside jq instead of `… | head -n 1`
+          # avoids a SIGPIPE race: under `set -o pipefail`, `head` closing
+          # the pipe early causes `gh` to exit 141 on its next write,
+          # which fails the step intermittently depending on output
+          # buffering. `first // empty` returns "" cleanly when nothing
+          # matches.
           tag=$(gh release list --repo launchdarkly/sdk-meta --limit 100 \
                   --exclude-drafts --exclude-pre-releases \
-                  --json tagName --jq '.[] | .tagName | select(startswith("snippets/"))' \
-                | head -n 1)
+                  --json tagName \
+                  --jq 'map(.tagName | select(startswith("snippets/"))) | first // empty')
           if [ -z "$tag" ]; then
             echo "::error::no published snippets/* release found in launchdarkly/sdk-meta"
             exit 1
@@ -176,30 +197,54 @@ runs:
 
     # 6. Render against the consumer checkout. `snippets` is now on $PATH.
     #    The CLI loads the canonical sdks/ tree from the binary's embedded FS
-    #    — no separate snippet sources to fetch. Each line of the
-    #    `entrypoints:` input becomes one `--entrypoint=` flag (relative paths
-    #    resolve against $GITHUB_WORKSPACE).
+    #    — no separate snippet sources to fetch. Marker-driven targets
+    #    (ld-application, ld-docs) take one or more `--entrypoint=` flags
+    #    parsed from the newline-separated `entrypoints:` input; the
+    #    manifest-driven `raw-files` target takes a single `--manifest=`
+    #    pointing at a YAML the consumer commits.
     - name: 'Render snippets'
       shell: bash
       env:
+        TARGET: ${{ inputs.target }}
         ENTRYPOINTS: ${{ inputs.entrypoints }}
+        MANIFEST: ${{ inputs.manifest }}
       run: |
         set -euo pipefail
         snippets version
         cd "$GITHUB_WORKSPACE"
-        args=()
-        while IFS= read -r line; do
-          # Strip surrounding whitespace; skip empty lines.
-          line="${line#"${line%%[![:space:]]*}"}"
-          line="${line%"${line##*[![:space:]]}"}"
-          [ -z "$line" ] && continue
-          args+=("--entrypoint=$line")
-        done <<< "$ENTRYPOINTS"
-        if [ ${#args[@]} -eq 0 ]; then
-          echo "::error::sync-snippets: at least one non-empty entrypoint must be provided"
-          exit 1
-        fi
-        snippets render --target="${{ inputs.target }}" "${args[@]}"
+        case "$TARGET" in
+          raw-files)
+            if [ -z "$MANIFEST" ]; then
+              echo "::error::sync-snippets: target=raw-files requires manifest:"
+              exit 1
+            fi
+            if [ -n "$ENTRYPOINTS" ] && [ -n "$(echo "$ENTRYPOINTS" | tr -d '[:space:]')" ]; then
+              echo "::warning::sync-snippets: entrypoints: ignored when target=raw-files"
+            fi
+            snippets render --target=raw-files --manifest="$MANIFEST"
+            ;;
+          ld-application|ld-docs)
+            args=()
+            while IFS= read -r line; do
+              line="${line#"${line%%[![:space:]]*}"}"
+              line="${line%"${line##*[![:space:]]}"}"
+              [ -z "$line" ] && continue
+              args+=("--entrypoint=$line")
+            done <<< "$ENTRYPOINTS"
+            if [ ${#args[@]} -eq 0 ]; then
+              echo "::error::sync-snippets: target=$TARGET requires at least one non-empty entrypoint"
+              exit 1
+            fi
+            if [ -n "$MANIFEST" ]; then
+              echo "::warning::sync-snippets: manifest: ignored when target=$TARGET"
+            fi
+            snippets render --target="$TARGET" "${args[@]}"
+            ;;
+          *)
+            echo "::error::sync-snippets: unknown target $TARGET (expected ld-application, ld-docs, or raw-files)"
+            exit 1
+            ;;
+        esac
 
     # 7. Detect whether render touched anything. Empty diff means the consumer
     #    is already current; we exit cleanly with no PR.
@@ -222,7 +267,7 @@ runs:
     - id: cpr
       name: 'Open or update sync PR'
       if: steps.diff.outputs.changes == 'true'
-      uses: peter-evans/create-pull-request@67ccf781d68cd99b580ae25a5c18a1cc84ffff1f # v7.0.6
+      uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
       with:
         token: ${{ inputs.github-token }}
         commit-message: 'chore: sync SDK snippets to ${{ steps.resolve.outputs.tag }}'
