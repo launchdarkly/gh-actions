@@ -23,6 +23,10 @@
       "release-type": "simple",
       "package-name": "sign-dlls"
     },
+    "actions/sync-snippets": {
+      "release-type": "simple",
+      "package-name": "sync-snippets"
+    },
     "actions/verify-hello-app": {
       "release-type": "simple",
       "package-name": "verify-hello-app"
