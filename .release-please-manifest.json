@@ -5,5 +5,7 @@
   "actions/release-secrets": "1.2.0",
   "actions/sign-dlls": "1.0.0",
   "actions/sync-snippets": "0.0.0",
-  "actions/verify-hello-app": "2.0.1"
+  "actions/verify-hello-app": "2.0.1",
+  "workflows/lint-pr-title": "0.0.0",
+  "workflows/sdk-stale": "0.0.0"
 }

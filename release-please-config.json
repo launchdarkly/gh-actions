@@ -30,6 +30,14 @@
     "actions/verify-hello-app": {
       "release-type": "simple",
       "package-name": "verify-hello-app"
+    },
+    "workflows/lint-pr-title": {
+      "release-type": "simple",
+      "package-name": "lint-pr-title"
+    },
+    "workflows/sdk-stale": {
+      "release-type": "simple",
+      "package-name": "sdk-stale"
     }
   }
 }
