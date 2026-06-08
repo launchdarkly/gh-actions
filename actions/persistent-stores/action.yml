@@ -81,12 +81,10 @@ runs:
       # https://github.com/hashicorp/consul/issues/22822 so we need to run
       # 1.20.1 until they fix the issue
       run: |
-        choco install consul --version=1.20.1
-
-        # The chocolatey package registers Consul as a Windows service which
-        # races with the dev agent for port binding. Stop and disable it.
-        Stop-Service consul -ErrorAction SilentlyContinue
-        Set-Service consul -StartupType Disabled -ErrorAction SilentlyContinue
+        # The chocolatey package would otherwise register Consul as a Windows
+        # service which races with the dev agent for port binding. /noservice
+        # skips that registration so only the dev agent runs.
+        choco install consul --version=1.20.1 --params="'/noservice'"
 
         Start-Process consul -ArgumentList 'agent', '-dev', '-http-port=${{ inputs.consul_port }}'
 
