@@ -21,6 +21,10 @@ inputs:
     description: 'Recurse mode suitable for mono-repos.'
     required: false
     default: 'true'
+  ensure-non-empty:
+    description: 'Fail if the generated BOM contains no components, which may indicate an upstream generation failure.'
+    required: false
+    default: 'false'
 
 runs:
   using: composite
@@ -59,6 +63,22 @@ runs:
       cdxgen "${args[@]}" -o "${{ steps.info.outputs.bom_file }}" ${{ inputs.project-directory }}
     env:
       FETCH_LICENSE: ${{ inputs.fetch-license }}
+
+  - name: Validate BOM is non-empty
+    if: inputs.ensure-non-empty == 'true'
+    shell: bash
+    run: |
+      bom_file="${{ steps.info.outputs.bom_file }}"
+      if [[ ! -f "$bom_file" ]]; then
+        echo "::error::BOM file '$bom_file' was not generated."
+        exit 1
+      fi
+      count=$(jq '.components | length' "$bom_file")
+      if [[ "$count" -eq 0 ]]; then
+        echo "::error::BOM file '$bom_file' contains no components. This may indicate an upstream generation failure."
+        exit 1
+      fi
+      echo "BOM validation passed: $count component(s) found."
 
   - name: Store Bill of Materials
     uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
