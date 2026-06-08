@@ -88,7 +88,8 @@ runs:
 
         Start-Process consul -ArgumentList 'agent', '-dev', '-http-port=${{ inputs.consul_port }}'
 
-        # Wait for the dev agent to complete Raft leader election.
+        # Start-Process returns immediately, so wait until the dev agent's HTTP
+        # API is up and serving (leader elected) before tests run.
         $timeout = 30
         $elapsed = 0
         while ($elapsed -lt $timeout) {
