@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.1](https://github.com/launchdarkly/gh-actions/compare/persistent-stores-v0.2.0...persistent-stores-v0.2.1) (2026-06-08)
+
+
+### Bug Fixes
+
+* Install Consul without Windows service to avoid dev agent conflict ([#77](https://github.com/launchdarkly/gh-actions/issues/77)) ([a14500d](https://github.com/launchdarkly/gh-actions/commit/a14500d6c2585d643807dc1764a4bd2d206c398f))
+* Restore HTTP readiness poll for Consul on Windows ([#92](https://github.com/launchdarkly/gh-actions/issues/92)) ([0a5a29e](https://github.com/launchdarkly/gh-actions/commit/0a5a29e9951829b30766f098ce873b5d603b75a3))
+
 ## [0.2.0](https://github.com/launchdarkly/gh-actions/compare/persistent-stores-v0.1.2...persistent-stores-v0.2.0) (2025-12-16)
 
 
