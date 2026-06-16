@@ -24,11 +24,12 @@ runs:
         role-to-assume: ${{ inputs.aws_assume_role }}
         aws-region: us-east-1
     - name: Load environment variables
-      uses: dkershner6/aws-ssm-getparameters-action@4fcb4872421f387a6c43058473acc1b22443fe13 # 4fcb4872421f387a6c43058473acc1b22443fe13
+      shell: bash
       if: ${{ inputs.ssm_parameter_pairs != '' }}
-      with:
-        parameterPairs: ${{ inputs.ssm_parameter_pairs }}
-        withDecryption: 'true'
+      env:
+        SSM_PARAMETER_PAIRS: ${{ inputs.ssm_parameter_pairs }}
+      run: |
+        source $GITHUB_ACTION_PATH/ssm-get-parameters.sh
     - name: Download S3 files
       shell: bash
       if: ${{ inputs.s3_path_pairs != '' }}
