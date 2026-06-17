@@ -8,6 +8,13 @@ It can also be used to download files from s3.
 
 The repository must be configured with OIDC, allowing access to an AWS account.
 
+The SSM step runs a bundled Node script, so the runner must have `node` on its
+`PATH` (GitHub-hosted runners do; self-hosted runners need Node installed).
+
+`ssm_parameter_pairs` paths must be plain SSM parameter names. Version or label
+selectors (`/path:2`, `/path:label`) are not supported — the value is looked up
+by its bare name and a selector will fail the lookup.
+
 # Example
 
 This example uses the release-secrets action to get an NPM token.

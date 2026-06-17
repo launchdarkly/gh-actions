@@ -28,8 +28,7 @@ runs:
       if: ${{ inputs.ssm_parameter_pairs != '' }}
       env:
         SSM_PARAMETER_PAIRS: ${{ inputs.ssm_parameter_pairs }}
-      run: |
-        source $GITHUB_ACTION_PATH/ssm-get-parameters.sh
+      run: node "$GITHUB_ACTION_PATH/ssm/dist/index.js"
     - name: Download S3 files
       shell: bash
       if: ${{ inputs.s3_path_pairs != '' }}
