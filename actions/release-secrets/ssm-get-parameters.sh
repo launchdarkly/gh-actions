@@ -59,6 +59,13 @@ for ((i=0; i<total; i+=chunk_size)); do
   # Stream Name/Value as NUL-delimited records so values containing newlines,
   # tabs, or '=' are preserved exactly.
   while IFS= read -r -d '' name && IFS= read -r -d '' value; do
+    # Mask every line of the value the moment it enters the shell, before it is
+    # stored or used anywhere else, so the unmasked window is as small as
+    # possible. ::add-mask:: is line-oriented, so a multiline secret (PEM key,
+    # cert, JSON blob) must be masked line by line or the tail leaks into logs.
+    while IFS= read -r mask_line || [ -n "${mask_line}" ]; do
+      [ -n "${mask_line}" ] && echo "::add-mask::${mask_line}"
+    done <<< "${value}"
     values["${name}"]="${value}"
   done < <(printf '%s' "${result}" | jq -j '.Parameters[] | .Name + "\u0000" + .Value + "\u0000"')
 done
@@ -74,19 +81,13 @@ for ((k=0; k<total; k++)); do
   fi
 done
 
-# Resolve each requested pair, mask the value, and export it.
+# Resolve each requested pair and export it (values were masked on fetch).
 for ((k=0; k<total; k++)); do
   ssm_path="${ssm_paths[k]}"
   env_name="${env_names[k]}"
   value="${values["${ssm_path}"]}"
 
-  # Mask every line of the value. ::add-mask:: is line-oriented, so a multiline
-  # secret (PEM key, cert, JSON blob) must be masked line by line or the tail
-  # leaks into the logs.
-  while IFS= read -r mask_line || [ -n "${mask_line}" ]; do
-    [ -n "${mask_line}" ] && echo "::add-mask::${mask_line}"
-  done <<< "${value}"
-
+  # The value was already registered with ::add-mask:: in the fetch loop above.
   # Write to GITHUB_ENV using heredoc-delimiter syntax. A plain "NAME=value"
   # only handles single-line values; a multiline value would be truncated and
   # its remaining lines parsed as additional (attacker-controllable) env
