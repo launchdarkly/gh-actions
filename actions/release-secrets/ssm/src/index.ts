@@ -98,7 +98,6 @@ async function runImpl(input: string, client: SSMClient): Promise<void> {
   }
 }
 
-/* istanbul ignore next */
 if (require.main === module) {
   run(process.env.SSM_PARAMETER_PAIRS ?? '').catch((err) => {
     core.setFailed(err instanceof Error ? err.message : String(err))
