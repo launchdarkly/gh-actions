@@ -72,14 +72,14 @@ describe('run', () => {
     expect(exportVariable).toHaveBeenCalledWith('DB_PASS', 'secretDB')
   })
 
-  it('masks a multiline value as a whole AND per line (runner masking is line-oriented)', async () => {
+  it('registers a multiline value with setSecret (the runner masks each line)', async () => {
     const pem = '-----BEGIN-----\nLINE2\n-----END-----'
     withFixture({ '/app/key': pem })
     await run('/app/key = PRIVATE_KEY', new SSMClient({}))
+    // We register the whole value once; the runner's add-mask handler splits it
+    // on newlines and masks each line, so we do not replicate that here.
     expect(setSecret).toHaveBeenCalledWith(pem)
-    expect(setSecret).toHaveBeenCalledWith('-----BEGIN-----')
-    expect(setSecret).toHaveBeenCalledWith('LINE2')
-    expect(setSecret).toHaveBeenCalledWith('-----END-----')
+    expect(setSecret).toHaveBeenCalledTimes(1)
     expect(exportVariable).toHaveBeenCalledWith('PRIVATE_KEY', pem)
   })
 

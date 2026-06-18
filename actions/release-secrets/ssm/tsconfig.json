@@ -1,10 +1,14 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "CommonJS",
-    "moduleResolution": "Node",
+    // ncc is the bundler; "Preserve" + "Bundler" lets it consume ESM-only deps
+    // (e.g. @actions/core v3) from this CommonJS entrypoint without tsc raising
+    // a spurious CJS/ESM interop error.
+    "module": "Preserve",
+    "moduleResolution": "Bundler",
     "lib": ["ES2022"],
     "types": ["node"],
+    "rootDir": "src",
     "strict": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,

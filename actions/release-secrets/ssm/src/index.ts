@@ -39,19 +39,6 @@ export function parsePairs(input: string): Pair[] {
   return pairs
 }
 
-/**
- * Register a value for masking. core.setSecret masks the whole value, but the
- * runner's log masking is line-oriented, so each non-empty line of a multiline
- * secret (PEM key, certificate, JSON blob) must be registered individually or
- * its second-and-later lines can leak into logs.
- */
-export function maskSecret(value: string, setSecret = core.setSecret): void {
-  setSecret(value)
-  for (const line of value.split(/\r?\n/)) {
-    if (line !== '') setSecret(line)
-  }
-}
-
 export function chunk<T>(items: T[], size: number): T[][] {
   const out: T[][] = []
   for (let i = 0; i < items.length; i += size) {
@@ -83,7 +70,11 @@ async function runImpl(input: string, client: SSMClient): Promise<void> {
     )
     for (const param of res.Parameters ?? []) {
       if (param.Name === undefined || param.Value === undefined) continue
-      maskSecret(param.Value)
+      // setSecret masks multiline secrets correctly: it emits one `::add-mask::`
+      // command and the runner masks both the whole value and each line — see
+      // https://github.com/actions/runner/blob/main/src/Runner.Worker/ActionCommandManager.cs
+      // (AddMaskCommandExtension splits the value on \r\n and masks each line).
+      core.setSecret(param.Value)
       values.set(param.Name, param.Value)
     }
   }
