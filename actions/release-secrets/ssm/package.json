@@ -9,7 +9,7 @@
   },
   "packageManager": "yarn@4.17.0",
   "scripts": {
-    "build": "ncc build src/index.ts -o dist --minify --no-source-map-register",
+    "build": "ncc build src/main.ts -o dist --minify --no-source-map-register",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "all": "yarn typecheck && yarn test && yarn build"

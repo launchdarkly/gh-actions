@@ -34,6 +34,16 @@ export function parsePairs(input: string): Pair[] {
         `Malformed ssm_parameter_pairs entry: '${entry}' (expected '/ssm/path = ENV_NAME')`,
       )
     }
+    // Reject version/label selectors (`name:3`, `name:prod`). SSM returns the
+    // base name in Parameter.Name (the selector goes in a separate field), so a
+    // selector would never match on lookup and the secret would be fetched but
+    // then reported as missing. Fail early with a clear message instead.
+    if (ssmPath.includes(':')) {
+      throw new Error(
+        `SSM parameter '${ssmPath}' uses a version/label selector (':'), which is not ` +
+          `supported; reference the parameter by name only.`,
+      )
+    }
     pairs.push({ ssmPath, envName })
   }
   return pairs
@@ -96,10 +106,4 @@ async function runImpl(input: string, client: SSMClient): Promise<void> {
     core.exportVariable(envName, values.get(ssmPath) as string)
     core.info(`Env variable ${envName} set with value from ssm parameterName ${ssmPath}`)
   }
-}
-
-if (require.main === module) {
-  run(process.env.SSM_PARAMETER_PAIRS ?? '').catch((err) => {
-    core.setFailed(err instanceof Error ? err.message : String(err))
-  })
 }

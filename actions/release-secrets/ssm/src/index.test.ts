@@ -56,6 +56,10 @@ describe('parsePairs', () => {
     expect(() => parsePairs(' = DB')).toThrow(/Malformed/)
     expect(() => parsePairs('/app/db = ')).toThrow(/Malformed/)
   })
+  it('throws on a version/label selector, which SSM does not echo back by name', () => {
+    expect(() => parsePairs('/app/db:3 = DB_PASS')).toThrow(/selector/)
+    expect(() => parsePairs('/app/db:prod = DB_PASS')).toThrow(/selector/)
+  })
 })
 
 describe('chunk', () => {
