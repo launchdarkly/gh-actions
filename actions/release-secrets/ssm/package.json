@@ -1,0 +1,29 @@
+{
+  "name": "release-secrets-ssm",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Fetch SSM parameters, mask them, and export them to GITHUB_ENV. Run via `node dist/index.js` from the release-secrets composite action.",
+  "main": "dist/index.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "yarn@4.17.0",
+  "scripts": {
+    "build": "ncc build src/main.ts -o dist --minify --no-source-map-register",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "all": "yarn typecheck && yarn test && yarn build"
+  },
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@actions/core": "^3.0.1",
+    "@aws-sdk/client-ssm": "^3.1067.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.3",
+    "@vercel/ncc": "^0.44.0",
+    "aws-sdk-client-mock": "^4.1.0",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.8"
+  }
+}
