@@ -57,11 +57,10 @@ export function chunk<T>(items: T[], size: number): T[][] {
   return out
 }
 
-export function run(input: string, client: SSMClient = new SSMClient({ region: REGION })): Promise<void> {
-  return runImpl(input, client)
-}
-
-async function runImpl(input: string, client: SSMClient): Promise<void> {
+export async function run(
+  input: string,
+  client: SSMClient = new SSMClient({ region: REGION }),
+): Promise<void> {
   const pairs = parsePairs(input)
   if (pairs.length === 0) {
     core.info('No SSM parameter pairs to process.')
