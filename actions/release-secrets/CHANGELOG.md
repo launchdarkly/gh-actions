@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/launchdarkly/gh-actions/compare/release-secrets-v1.2.0...release-secrets-v1.2.1) (2026-07-09)
+
+
+### Bug Fixes
+
+* update aws-actions/configure-aws-credentials from v4 to v6 (node24) ([#95](https://github.com/launchdarkly/gh-actions/issues/95)) ([e2e5c59](https://github.com/launchdarkly/gh-actions/commit/e2e5c59378f1606fd136ad233cc7e7483ae42d62))
+
 ## [1.2.0](https://github.com/launchdarkly/gh-actions/compare/release-secrets-v1.1.0...release-secrets-v1.2.0) (2024-06-18)
 
 
