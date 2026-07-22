@@ -8,7 +8,7 @@
     },
     {
       "matchPackageNames": ["ruby/setup-ruby"],
-      "matchUpdateTypes": ["patch"],
+      "matchUpdateTypes": ["minor", "patch"],
       "automerge": true
     }
   ]
