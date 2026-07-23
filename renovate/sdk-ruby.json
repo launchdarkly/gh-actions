@@ -5,11 +5,6 @@
     {
       "enabled": false,
       "matchDatasources": ["rubygems"]
-    },
-    {
-      "matchPackageNames": ["ruby/setup-ruby"],
-      "matchUpdateTypes": ["minor", "patch"],
-      "automerge": true
     }
   ]
 }
