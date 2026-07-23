@@ -1,0 +1,18 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
+  "packageRules": [
+    {
+      "matchDepTypes": ["action"],
+      "matchPackagePatterns": ["^launchdarkly/gh-actions"],
+      "pinDigests": false
+    }
+  ],
+  "schedule": ["0 0 1 * *"],
+  "minimumReleaseAge": "7 days",
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "schedule": ["* * * * *"]
+  },
+  "osvVulnerabilityAlerts": true
+}

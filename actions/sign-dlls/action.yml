@@ -46,7 +46,12 @@ runs:
         CONFIG_PATH: ${{ inputs.build_configuration_path }}
         DLL_NAME: ${{ inputs.dll_name }}
       run: |
-        for dll in $(find $CONFIG_PATH -name $DLL_NAME); do
+        dlls=$(find "$CONFIG_PATH" -name "$DLL_NAME")
+        if [ -z "$dlls" ]; then
+          echo "::error::No files matching '$DLL_NAME' found in '$CONFIG_PATH'"
+          exit 1
+        fi
+        for dll in $dlls; do
           echo "${dll}"
           smctl sign --keypair-alias key_573919999 --config-file="/tmp/DigiCert One Signing Manager Tools/smtools-linux-x64/pkcs11properties.cfg" --input "${dll}"
         done
