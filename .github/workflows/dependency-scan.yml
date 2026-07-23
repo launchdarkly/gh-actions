@@ -1,0 +1,39 @@
+name: Dependency Scan
+# Call this by uses: launchdarkly/gh-actions/.github/workflows/dependency-scan.yml@main
+
+on:
+  workflow_call:
+    inputs:
+      types:
+        description: 'SBOM types to generate (e.g., "nodejs" or "nodejs,go"). See https://cyclonedx.github.io/cdxgen/#/PROJECT_TYPES'
+        required: false
+        default: 'nodejs'
+        type: string
+      runs-on:
+        description: 'Runner specification'
+        required: false
+        default: 'ubuntu-latest'
+        type: string
+
+jobs:
+  generate-sbom:
+    runs-on: ${{ inputs.runs-on }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate SBOM
+        uses: launchdarkly/gh-actions/actions/dependency-scan/generate-sbom@main
+        with:
+          types: ${{ inputs.types }}
+
+  evaluate-policy:
+    runs-on: ${{ inputs.runs-on }}
+    needs:
+      - generate-sbom
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Evaluate SBOM Policy
+        uses: launchdarkly/gh-actions/actions/dependency-scan/evaluate-policy@main
+        with:
+          artifacts-pattern: bom*
