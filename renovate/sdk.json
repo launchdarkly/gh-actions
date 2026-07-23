@@ -8,9 +8,11 @@
       "pinDigests": false
     }
   ],
+  "schedule": ["0 0 1 * *"],
   "minimumReleaseAge": "7 days",
   "vulnerabilityAlerts": {
-    "enabled": true
+    "enabled": true,
+    "schedule": ["* * * * *"]
   },
   "osvVulnerabilityAlerts": true
 }
