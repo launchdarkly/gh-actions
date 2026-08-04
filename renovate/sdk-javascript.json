@@ -4,7 +4,7 @@
   "packageRules": [
     {
       "enabled": false,
-      "matchDatasources": ["npm"]
+      "matchManagers": ["npm"]
     }
   ]
 }

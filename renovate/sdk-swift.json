@@ -4,7 +4,7 @@
   "packageRules": [
     {
       "enabled": false,
-      "matchDatasources": ["pod"]
+      "matchManagers": ["cocoapods", "swift", "mint", "xcodegen"]
     }
   ]
 }
