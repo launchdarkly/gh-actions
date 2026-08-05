@@ -5,6 +5,12 @@
     {
       "enabled": false,
       "matchManagers": ["bundler"]
+    },
+    {
+      "matchManagers": ["bundler"],
+      "isVulnerabilityAlert": true,
+      "enabled": true,
+      "vulnVersionOverride": "lowest"
     }
   ]
 }
