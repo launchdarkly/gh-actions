@@ -4,7 +4,7 @@
   "packageRules": [
     {
       "enabled": false,
-      "matchManagers": ["npm"]
+      "matchManagers": ["cocoapods", "swift", "mint", "xcodegen"]
     }
   ]
 }
