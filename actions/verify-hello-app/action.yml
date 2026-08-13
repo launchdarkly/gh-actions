@@ -55,17 +55,33 @@ runs:
     - name: 'Run hello-app command'
       shell: bash
       run: |
-        output=$(${{ inputs.command }})
+        # GitHub runs a composite `shell: bash` step as
+        # `bash --noprofile --norc -e -o pipefail`. Capturing the command with
+        # `output=$(...)` therefore ended the step as soon as the command
+        # failed, before anything could report why, so a failing run logged
+        # only "Process completed with exit code 1". Streaming through tee
+        # keeps the output in the log as it is produced, which also covers a
+        # command that hangs and gets cancelled.
+        log="$(mktemp)"
 
-        if [ $? -ne 0 ]; then
-          echo "hello-app command '${{ inputs.command }}' exited with a non-zero status. Halting. Failure output follows."
-          echo $output
+        # The command runs in a subshell so that a `cd` or a `set -e` inside a
+        # caller's multi-line command stays contained, as it did under the
+        # previous command substitution. `set +e` lets a failure reach the
+        # check below instead of ending the step, and PIPESTATUS reports the
+        # command's own status rather than tee's.
+        set +e
+        (
+        ${{ inputs.command }}
+        ) 2>&1 | tee "$log"
+        status=${PIPESTATUS[0]}
+        set -e
+
+        if [ "$status" -ne 0 ]; then
+          echo "::error::hello-app command exited with status $status. Its output is above."
           exit 1
         fi
 
-        echo "$output" | grep -i "feature flag evaluates to true"
-
-        if [ $? -ne 0 ]; then
-          echo "hello-app command did not produce the expected output"
+        if ! grep -qi "feature flag evaluates to true" "$log"; then
+          echo "::error::hello-app command did not produce the expected output. Its output is above."
           exit 1
         fi
