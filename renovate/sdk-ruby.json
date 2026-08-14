@@ -6,5 +6,10 @@
       "enabled": false,
       "matchManagers": ["bundler"]
     }
-  ]
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "schedule": ["* * * * *"]
+  },
+  "osvVulnerabilityAlerts": true
 }
