@@ -104,7 +104,13 @@ jobs:
           done
 
       - name: Update Go versions
-        if: steps.current.outputs.latest != env.officialLatest
+        # Both keys are compared, not just latest. With precision: latest the two supported
+        # lines get patched independently, so penultimate can move while latest stands still
+        # (1.26.7 -> 1.26.8 with no 1.27.x release). Gating on latest alone silently skips
+        # those, which is what the inline shell in the consuming repos does today.
+        if: >-
+          steps.current.outputs.latest != env.officialLatest ||
+          steps.current.outputs.penultimate != env.officialPenultimate
         id: update
         env:
           VERSIONS_FILE: ${{ inputs.versions_file }}
