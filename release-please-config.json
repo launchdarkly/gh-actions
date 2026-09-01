@@ -11,7 +11,13 @@
       "release-type": "simple",
       "package-name": "go-eol-versions",
       "initial-version": "0.1.0",
-      "bump-minor-pre-major": true
+      "bump-minor-pre-major": true,
+      "extra-files": [
+        {
+          "type": "generic",
+          "path": "/.github/workflows/sdk-go-versions.yml"
+        }
+      ]
     },
     "actions/persistent-stores": {
       "release-type": "simple",

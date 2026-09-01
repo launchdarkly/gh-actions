@@ -71,4 +71,9 @@ opens bump PRs after a 7-day `minimumReleaseAge` -- a `@main` reference is invis
 silently adopts every change the moment it merges. `@main` is only used in this repository for
 components that release-please does not version, such as `dependency-scan`.
 
+The in-repo reference from `sdk-go-versions.yml` keeps itself current: that line carries an
+`# x-release-please-version` annotation and the workflow is listed under this package's
+`extra-files`, so release-please rewrites the pin as part of each release. Keep the pinned
+version the only `x.y.z` on that line, or the generic updater will rewrite the wrong one.
+
 Neither tag exists until the first release lands.
