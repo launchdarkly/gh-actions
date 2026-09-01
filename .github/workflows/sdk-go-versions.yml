@@ -55,7 +55,11 @@ jobs:
     steps:
       - name: Fetch officially supported Go versions
         id: go-versions
-        uses: launchdarkly/gh-actions/actions/go-eol-versions@main
+        # TODO(before merge): change back to @main. Pinned to this PR's branch so the
+        # proof-of-concept consumer can be dispatched and observed before this merges --
+        # @main does not contain the action yet, so a consumer pinned only by SHA would
+        # still fail here.
+        uses: launchdarkly/gh-actions/actions/go-eol-versions@feat/go-eol-versions-action
         with:
           precision: ${{ inputs.precision }}
 

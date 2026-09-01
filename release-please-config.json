@@ -7,6 +7,10 @@
       "release-type": "simple",
       "package-name": "contract-tests"
     },
+    "actions/go-eol-versions": {
+      "release-type": "simple",
+      "package-name": "go-eol-versions"
+    },
     "actions/persistent-stores": {
       "release-type": "simple",
       "package-name": "persistent-stores"
