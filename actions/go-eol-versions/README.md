@@ -49,7 +49,7 @@ jobs:
       latest: ${{ steps.go-versions.outputs.latest }}
       penultimate: ${{ steps.go-versions.outputs.penultimate }}
     steps:
-      - uses: launchdarkly/gh-actions/actions/go-eol-versions@go-eol-versions-v1
+      - uses: launchdarkly/gh-actions/actions/go-eol-versions@go-eol-versions-v0.1.0
         id: go-versions
         with:
           precision: cycle
@@ -57,6 +57,10 @@ jobs:
 
 The job needs no `actions/checkout`; the action only makes an HTTP request.
 
-This action is tracked by release-please, so `go-eol-versions-v1` is a floating major tag
-that follows each release. Pin the exact version instead -- `go-eol-versions-v1.0.0` -- if
-you need the reference to be immutable. Neither tag exists until the first release lands.
+# Versioning
+
+This action is tracked by release-please and starts at `0.1.0`. While it is below `1.0.0`,
+breaking changes bump the minor version, so **pin the exact version** as shown above rather
+than the floating `go-eol-versions-v0` tag -- a `v0` pin would follow breaking changes.
+
+Neither tag exists until the first release lands.
