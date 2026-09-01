@@ -1,0 +1,183 @@
+name: Check Supported Go Versions
+# Call this by uses: launchdarkly/gh-actions/.github/workflows/sdk-go-versions.yml@main
+#
+# The calling job must grant `contents: write` and `pull-requests: write`. A reusable
+# workflow can only narrow the permissions it is handed, and `check-go-eol` narrows itself
+# to `contents: read`.
+
+on:
+  workflow_call:
+    inputs:
+      branches:
+        description: 'JSON array of branches to open bump pull requests against, e.g. ''["v7"]'' or ''["v3", "v4"]''.'
+        required: true
+        type: string
+      precision:
+        description: "'cycle' to track the major.minor version (1.27), or 'latest' to track the patch version (1.27.0)."
+        required: false
+        default: cycle
+        type: string
+      versions_file:
+        description: 'Path to the file holding the current `latest=` and `penultimate=` values.'
+        required: false
+        default: .github/variables/go-versions.env
+        type: string
+      update_script:
+        description: 'Optional script, invoked as `<script> <latest> <penultimate>`. When empty, `latest=` and `penultimate=` in versions_file are rewritten in place.'
+        required: false
+        default: ''
+        type: string
+      add_paths:
+        description: 'Newline-separated list of paths to include in the pull request. Set this when update_script touches more than versions_file.'
+        required: false
+        default: .github/variables/go-versions.env
+        type: string
+      pr_title_prefix:
+        description: 'Conventional-commit prefix for the pull request title, e.g. "ci" or "fix(deps)".'
+        required: false
+        default: ci
+        type: string
+      runs_on:
+        description: 'Runner specification'
+        required: false
+        default: ubuntu-latest
+        type: string
+
+jobs:
+  check-go-eol:
+    runs-on: ${{ inputs.runs_on }}
+    permissions:
+      contents: read
+    timeout-minutes: 5
+    outputs:
+      latest: ${{ steps.go-versions.outputs.latest }}
+      penultimate: ${{ steps.go-versions.outputs.penultimate }}
+    steps:
+      - name: Fetch officially supported Go versions
+        id: go-versions
+        # Pinned to an exact release tag, matching how the fleet consumes versioned
+        # components of this repo (e.g. persistent-stores@persistent-stores-v0.2.0 in
+        # ld-relay). Pinning is what makes the versioning load-bearing: an action release
+        # reaches the consumers through a bump of this line, not the instant it hits main.
+        #
+        # The trailing annotation means release-please bumps this line itself on every
+        # release -- see the extra-files entry for this package in release-please-config.json.
+        # Do not remove it, and keep the version the only x.y.z on the line.
+        uses: launchdarkly/gh-actions/actions/go-eol-versions@go-eol-versions-v0.1.0 # x-release-please-version
+        with:
+          precision: ${{ inputs.precision }}
+
+  create-prs:
+    needs: check-go-eol
+    runs-on: ${{ inputs.runs_on }}
+    permissions:
+      contents: write
+      pull-requests: write
+    strategy:
+      matrix:
+        branch: ${{ fromJSON(inputs.branches) }}
+      fail-fast: false
+    env:
+      officialLatest: ${{ needs.check-go-eol.outputs.latest }}
+      officialPenultimate: ${{ needs.check-go-eol.outputs.penultimate }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ matrix.branch }}
+
+      # Read the versions the branch is currently on, so the run can tell whether there is
+      # anything to do and can describe the change in the commit message.
+      - name: Get current Go versions
+        id: current
+        env:
+          VERSIONS_FILE: ${{ inputs.versions_file }}
+          BRANCH: ${{ matrix.branch }}
+        run: |
+          set -euo pipefail
+          for key in latest penultimate; do
+            value=$(grep -E "^${key}=" "$VERSIONS_FILE" | head -1 | cut -d= -f2- | tr -d '[:space:]')
+            if [ -z "$value" ]; then
+              echo "::error::No ${key}= entry found in $VERSIONS_FILE on $BRANCH"
+              exit 1
+            fi
+            echo "${key}=${value}" >>"$GITHUB_OUTPUT"
+          done
+
+      - name: Update Go versions
+        # Both keys are compared, not just latest. With precision: latest the two supported
+        # lines get patched independently, so penultimate can move while latest stands still
+        # (1.26.7 -> 1.26.8 with no 1.27.x release). Gating on latest alone silently skips
+        # those, which is what the inline shell in the consuming repos does today.
+        if: >-
+          steps.current.outputs.latest != env.officialLatest ||
+          steps.current.outputs.penultimate != env.officialPenultimate
+        id: update
+        env:
+          VERSIONS_FILE: ${{ inputs.versions_file }}
+          UPDATE_SCRIPT: ${{ inputs.update_script }}
+          CURRENT_LATEST: ${{ steps.current.outputs.latest }}
+          CURRENT_PENULTIMATE: ${{ steps.current.outputs.penultimate }}
+        run: |
+          set -euo pipefail
+          if [ -n "$UPDATE_SCRIPT" ]; then
+            "$UPDATE_SCRIPT" "$officialLatest" "$officialPenultimate"
+          else
+            # Anchored so a `min=` line, or anything else in the file, is left alone.
+            sed -i -e "s#^latest=.*#latest=$officialLatest#" \
+                   -e "s#^penultimate=.*#penultimate=$officialPenultimate#" \
+                   "$VERSIONS_FILE"
+          fi
+
+          # Describe only the keys that actually moved. A penultimate-only bump would
+          # otherwise report "latest 1.27 -> 1.27" in the commit message and render a
+          # no-change row in the pull request body.
+          summary=""
+          rows=""
+          if [ "$CURRENT_LATEST" != "$officialLatest" ]; then
+            summary="latest $CURRENT_LATEST -> $officialLatest"
+            rows="| Latest | $CURRENT_LATEST | [$officialLatest](https://go.dev/doc/devel/release#go$officialLatest) |"
+          fi
+          if [ "$CURRENT_PENULTIMATE" != "$officialPenultimate" ]; then
+            if [ -n "$summary" ]; then
+              summary="$summary, "
+              rows="$rows"$'\n'
+            fi
+            summary="${summary}penultimate $CURRENT_PENULTIMATE -> $officialPenultimate"
+            rows="${rows}| Penultimate | $CURRENT_PENULTIMATE | [$officialPenultimate](https://go.dev/doc/devel/release#go$officialPenultimate) |"
+          fi
+
+          echo "summary=$summary" >>"$GITHUB_OUTPUT"
+          {
+            echo "rows<<SDK_GO_VERSIONS_ROWS"
+            echo "$rows"
+            echo "SDK_GO_VERSIONS_ROWS"
+          } >>"$GITHUB_OUTPUT"
+
+      - name: Create pull request
+        if: steps.update.outcome == 'success'
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          add-paths: ${{ inputs.add_paths }}
+          # Both versions are in the branch name. Naming it after `latest` alone means a
+          # penultimate-only bump produces a branch named for the version that did not
+          # change, and collides with the branch of the previous bump.
+          branch: "launchdarklyreleasebot/update-to-go${{ needs.check-go-eol.outputs.latest }}-${{ needs.check-go-eol.outputs.penultimate }}-${{ matrix.branch }}"
+          author: "LaunchDarklyReleaseBot <LaunchDarklyReleaseBot@launchdarkly.com>"
+          committer: "LaunchDarklyReleaseBot <LaunchDarklyReleaseBot@launchdarkly.com>"
+          labels: ${{ matrix.branch }}
+          title: "${{ inputs.pr_title_prefix }}: bump supported Go versions to ${{ needs.check-go-eol.outputs.latest }} and ${{ needs.check-go-eol.outputs.penultimate }}"
+          commit-message: "Bumps Go ${{ steps.update.outputs.summary }}."
+          body: |
+            A new upstream Go release means this branch's supported versions are behind.
+
+            Go ships a major release roughly every six months and supports the two most
+            recent, so this branch should track them.
+
+            |             | Current | Desired |
+            |-------------|---------|---------|
+            ${{ steps.update.outputs.rows }}
+
+            Opened by [sdk-go-versions](https://github.com/launchdarkly/gh-actions/blob/main/.github/workflows/sdk-go-versions.yml).
+
+            - [ ] I have triggered CI on this PR (either close & reopen this PR in Github UI, or `git commit -m "run ci" --allow-empty && git push`)

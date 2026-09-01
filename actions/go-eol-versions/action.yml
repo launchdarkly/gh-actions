@@ -1,0 +1,31 @@
+# This action reports the Go versions that upstream currently supports, according to
+# endoflife.date. The response is untrusted input, so it is validated here rather than
+# by each caller. See README.md.
+name: Go EOL Versions
+description: Fetch and validate the two most recently released supported Go versions.
+inputs:
+  precision:
+    description: "'cycle' for the major.minor version (1.27), or 'latest' for the full patch version (1.27.0)."
+    required: false
+    default: cycle
+  api_url:
+    description: 'The endoflife.date endpoint to query. Override only for testing.'
+    required: false
+    default: 'https://endoflife.date/api/go.json'
+outputs:
+  latest:
+    description: 'The most recent supported Go version.'
+    value: ${{ steps.go-versions.outputs.latest }}
+  penultimate:
+    description: 'The second most recent supported Go version.'
+    value: ${{ steps.go-versions.outputs.penultimate }}
+runs:
+  using: composite
+  steps:
+    - name: Fetch officially supported Go versions
+      id: go-versions
+      shell: bash
+      run: source $GITHUB_ACTION_PATH/go-eol-versions.sh
+      env:
+        PRECISION: ${{ inputs.precision }}
+        API_URL: ${{ inputs.api_url }}
