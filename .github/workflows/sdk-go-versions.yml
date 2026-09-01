@@ -55,10 +55,19 @@ jobs:
     steps:
       - name: Fetch officially supported Go versions
         id: go-versions
-        # TODO(before merge): change back to @main. Pinned to this PR's branch so the
-        # proof-of-concept consumer can be dispatched and observed before this merges --
-        # @main does not contain the action yet, so a consumer pinned only by SHA would
-        # still fail here.
+        # This must end up pinned to an exact release tag -- go-eol-versions-v0.1.0 --
+        # matching how the rest of the fleet consumes versioned components of this repo
+        # (e.g. persistent-stores@persistent-stores-v0.2.0 in ld-relay). Pinning is what
+        # makes the release-please versioning load-bearing: an action release then reaches
+        # the fourteen consumers only through a reviewed bump of this line, instead of the
+        # instant it lands on main. Renovate maintains the bump automatically.
+        #
+        # Two flips are required, because the tag cannot exist before the code does:
+        #   1. before merge:        @feat/go-eol-versions-action -> @main
+        #   2. once v0.1.0 is cut:  @main                        -> @go-eol-versions-v0.1.0
+        #
+        # It points at the branch right now only so the proof-of-concept consumer,
+        # launchdarkly/go-test-helpers#37, could be dispatched and observed pre-merge.
         uses: launchdarkly/gh-actions/actions/go-eol-versions@feat/go-eol-versions-action
         with:
           precision: ${{ inputs.precision }}

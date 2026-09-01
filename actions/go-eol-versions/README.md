@@ -61,6 +61,14 @@ The job needs no `actions/checkout`; the action only makes an HTTP request.
 
 This action is tracked by release-please and starts at `0.1.0`. While it is below `1.0.0`,
 breaking changes bump the minor version, so **pin the exact version** as shown above rather
-than the floating `go-eol-versions-v0` tag -- a `v0` pin would follow breaking changes.
+than the floating `go-eol-versions-v0` tag -- a `v0` pin would follow breaking changes. (Some
+repositories do pin floating majors, such as `persistent-stores-v0` in `python-server-sdk`;
+that is fine for an action whose 0.x line is stable, and a hazard for one whose isn't.)
+
+Do not reference this action at `@main`. The `renovate/sdk` preset deliberately exempts
+`launchdarkly/gh-actions` from digest pinning, so Renovate tracks these tags by semver and
+opens bump PRs after a 7-day `minimumReleaseAge` -- a `@main` reference is invisible to it and
+silently adopts every change the moment it merges. `@main` is only used in this repository for
+components that release-please does not version, such as `dependency-scan`.
 
 Neither tag exists until the first release lands.
