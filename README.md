@@ -8,6 +8,7 @@ This repository contains LaunchDarkly shared GitHub Actions and Workflows for ot
 |---------------------------------------------------------------|-----------------------------------------------|
 | [contract-tests](./actions/contract-tests/README.md)          | Run SDK/SSE contract tests.                   |
 | [dependency-scan](./actions/dependency-scan/README.md)        | Generate SBOM and evaluate license policy.    |
+| [go-eol-versions](./actions/go-eol-versions/README.md)        | Report upstream-supported Go versions.        |
 | [persistent-stores](./actions/persistent-stores/README.md)    | Start persistent stores on linux/mac/windows. |
 | [publish-pages](./actions/publish-pages/README.md)            | Publishes documentation to Github Pages.      |
 | [release-secrets](./actions/release-secrets/README.md)        | Retrieve secrets from AWS Secrets Manager.    |
@@ -18,6 +19,7 @@ This repository contains LaunchDarkly shared GitHub Actions and Workflows for ot
 | Name                                                                | Description                                                            |
 |---------------------------------------------------------------------|------------------------------------------------------------------------|
 | [dependency-scan](./.github/workflows/dependency-scan.yml)          | Generates SBOM and evaluates license policy.                           |
+| [sdk-go-versions](./.github/workflows/sdk-go-versions.yml)          | Opens PRs bumping supported Go versions after an upstream release.    |
 | [sdk-stale](./.github/workflows/sdk-stale.yml)                      | Warns about stale issues, and then closes when required.               |
 | [lint-pr-title](./.github/workflows/lint-pr-title.yml)              | Ensures PR titles follow [Conventional Commits][conventional-commits]. |
 
