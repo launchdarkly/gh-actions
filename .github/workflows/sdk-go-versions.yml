@@ -115,6 +115,8 @@ jobs:
         env:
           VERSIONS_FILE: ${{ inputs.versions_file }}
           UPDATE_SCRIPT: ${{ inputs.update_script }}
+          CURRENT_LATEST: ${{ steps.current.outputs.latest }}
+          CURRENT_PENULTIMATE: ${{ steps.current.outputs.penultimate }}
         run: |
           set -euo pipefail
           if [ -n "$UPDATE_SCRIPT" ]; then
@@ -126,28 +128,55 @@ jobs:
                    "$VERSIONS_FILE"
           fi
 
+          # Describe only the keys that actually moved. A penultimate-only bump would
+          # otherwise report "latest 1.27 -> 1.27" in the commit message and render a
+          # no-change row in the pull request body.
+          summary=""
+          rows=""
+          if [ "$CURRENT_LATEST" != "$officialLatest" ]; then
+            summary="latest $CURRENT_LATEST -> $officialLatest"
+            rows="| Latest | $CURRENT_LATEST | [$officialLatest](https://go.dev/doc/devel/release#go$officialLatest) |"
+          fi
+          if [ "$CURRENT_PENULTIMATE" != "$officialPenultimate" ]; then
+            if [ -n "$summary" ]; then
+              summary="$summary, "
+              rows="$rows"$'\n'
+            fi
+            summary="${summary}penultimate $CURRENT_PENULTIMATE -> $officialPenultimate"
+            rows="${rows}| Penultimate | $CURRENT_PENULTIMATE | [$officialPenultimate](https://go.dev/doc/devel/release#go$officialPenultimate) |"
+          fi
+
+          echo "summary=$summary" >>"$GITHUB_OUTPUT"
+          {
+            echo "rows<<SDK_GO_VERSIONS_ROWS"
+            echo "$rows"
+            echo "SDK_GO_VERSIONS_ROWS"
+          } >>"$GITHUB_OUTPUT"
+
       - name: Create pull request
         if: steps.update.outcome == 'success'
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           add-paths: ${{ inputs.add_paths }}
-          branch: "launchdarklyreleasebot/update-to-go${{ needs.check-go-eol.outputs.latest }}-${{ matrix.branch }}"
+          # Both versions are in the branch name. Naming it after `latest` alone means a
+          # penultimate-only bump produces a branch named for the version that did not
+          # change, and collides with the branch of the previous bump.
+          branch: "launchdarklyreleasebot/update-to-go${{ needs.check-go-eol.outputs.latest }}-${{ needs.check-go-eol.outputs.penultimate }}-${{ matrix.branch }}"
           author: "LaunchDarklyReleaseBot <LaunchDarklyReleaseBot@launchdarkly.com>"
           committer: "LaunchDarklyReleaseBot <LaunchDarklyReleaseBot@launchdarkly.com>"
           labels: ${{ matrix.branch }}
           title: "${{ inputs.pr_title_prefix }}: bump supported Go versions to ${{ needs.check-go-eol.outputs.latest }} and ${{ needs.check-go-eol.outputs.penultimate }}"
-          commit-message: "Bumps from Go ${{ steps.current.outputs.latest }} -> ${{ needs.check-go-eol.outputs.latest }} and ${{ steps.current.outputs.penultimate }} -> ${{ needs.check-go-eol.outputs.penultimate }}."
+          commit-message: "Bumps Go ${{ steps.update.outputs.summary }}."
           body: |
-            A new upstream Go release means this repository's supported versions are behind.
+            A new upstream Go release means this branch's supported versions are behind.
 
             Go ships a major release roughly every six months and supports the two most
             recent, so this branch should track them.
 
-            |             | Current      | Desired                                                                                                                 |
-            |-------------|--------------|-------------------------------------------------------------------------------------------------------------------------|
-            | Latest      | ${{ steps.current.outputs.latest }}      | [${{ needs.check-go-eol.outputs.latest }}](https://go.dev/doc/devel/release#go${{ needs.check-go-eol.outputs.latest }})           |
-            | Penultimate | ${{ steps.current.outputs.penultimate }} | [${{ needs.check-go-eol.outputs.penultimate }}](https://go.dev/doc/devel/release#go${{ needs.check-go-eol.outputs.penultimate }}) |
+            |             | Current | Desired |
+            |-------------|---------|---------|
+            ${{ steps.update.outputs.rows }}
 
             Opened by [sdk-go-versions](https://github.com/launchdarkly/gh-actions/blob/main/.github/workflows/sdk-go-versions.yml).
 
