@@ -1,6 +1,3 @@
-# This action reports the Go versions that upstream currently supports, according to
-# endoflife.date. The response is untrusted input, so it is validated here rather than
-# by each caller. See README.md.
 name: Go EOL Versions
 description: Fetch and validate the two most recently released supported Go versions.
 inputs:

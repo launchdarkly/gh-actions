@@ -1,12 +1,5 @@
 #!/usr/bin/env bash
-# Writes the two most recent supported Go versions to $GITHUB_OUTPUT as `latest` and
-# `penultimate`.
-#
-# The endoflife.date response is untrusted input. It is held in a variable and read with
-# jq, never interpolated into a command, and each extracted version must match a strict
-# version pattern before it is written to $GITHUB_OUTPUT. That means a caller which
-# interpolates these outputs into a `run:` block is still safe, which is the whole point
-# of centralizing this: the validation cannot be forgotten one repository at a time.
+# Writes the two most recent supported Go versions to $GITHUB_OUTPUT. See README.md.
 
 set -euo pipefail
 
