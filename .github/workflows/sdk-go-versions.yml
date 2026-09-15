@@ -52,7 +52,7 @@ jobs:
     steps:
       - name: Fetch officially supported Go versions
         id: go-versions
-        uses: launchdarkly/gh-actions/actions/go-eol-versions@go-eol-versions-v0.1.0 # x-release-please-version
+        uses: launchdarkly/gh-actions/actions/go-eol-versions@main
         with:
           precision: ${{ inputs.precision }}
 

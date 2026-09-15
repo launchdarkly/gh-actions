@@ -65,15 +65,19 @@ than the floating `go-eol-versions-v0` tag -- a `v0` pin would follow breaking c
 repositories do pin floating majors, such as `persistent-stores-v0` in `python-server-sdk`;
 that is fine for an action whose 0.x line is stable, and a hazard for one whose isn't.)
 
-Do not reference this action at `@main`. The `renovate/sdk` preset deliberately exempts
-`launchdarkly/gh-actions` from digest pinning, so Renovate tracks these tags by semver and
-opens bump PRs after a 7-day `minimumReleaseAge` -- a `@main` reference is invisible to it and
-silently adopts every change the moment it merges. `@main` is only used in this repository for
-components that release-please does not version, such as `dependency-scan`.
+Repositories outside this one should not reference the action at `@main`. The `renovate/sdk`
+preset deliberately exempts `launchdarkly/gh-actions` from digest pinning, so Renovate tracks
+these tags by semver and opens bump PRs after a 7-day `minimumReleaseAge` -- a `@main`
+reference is invisible to it and silently adopts every change the moment it merges.
 
-The in-repo reference from `sdk-go-versions.yml` keeps itself current: that line carries an
-`# x-release-please-version` annotation and the workflow is listed under this package's
-`extra-files`, so release-please rewrites the pin as part of each release. Keep the pinned
-version the only `x.y.z` on that line, or the generic updater will rewrite the wrong one.
-
-Neither tag exists until the first release lands.
+The in-repo reference from `sdk-go-versions.yml` is the deliberate exception: it uses `@main`
+because release-please cannot maintain a pin there. `GITHUB_TOKEN` cannot write under
+`.github/workflows/`, and that is the token release-please runs with in this repository, so a
+pin on that line would have to be bumped by hand -- and forgotten, leaving `main`'s workflow
+calling an old copy of an action whose current source sits in the same commit, with nothing to
+surface the divergence. The same limitation removed `.github/workflows` as a release-please
+package in 98896e0; it is tracked upstream as
+[release-please-action#938](https://github.com/googleapis/release-please-action/issues/938) and
+is still open. Consumers call the reusable workflow itself at `@main`, so its body floats
+regardless and Renovate is not watching it; `@main` on the `uses:` line inside it at least
+moves the workflow and the action together.
