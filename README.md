@@ -16,12 +16,13 @@ This repository contains LaunchDarkly shared GitHub Actions and Workflows for ot
 | [verify-hello-apps](./actions/verify-hello-app/README.md)     | Run shared quality-checks for hello-apps.     |
 
 ## Workflows
-| Name                                                                | Description                                                            |
-|---------------------------------------------------------------------|------------------------------------------------------------------------|
-| [dependency-scan](./.github/workflows/dependency-scan.yml)          | Generates SBOM and evaluates license policy.                           |
-| [sdk-go-versions](./.github/workflows/sdk-go-versions.yml)          | Opens PRs bumping supported Go versions after an upstream release.    |
-| [sdk-stale](./.github/workflows/sdk-stale.yml)                      | Warns about stale issues, and then closes when required.               |
-| [lint-pr-title](./.github/workflows/lint-pr-title.yml)              | Ensures PR titles follow [Conventional Commits][conventional-commits]. |
+| Name                                                                   | Description                                                            |
+|------------------------------------------------------------------------|------------------------------------------------------------------------|
+| [dependency-scan](./.github/workflows/dependency-scan.yml)             | Generates SBOM and evaluates license policy.                           |
+| [sdk-go-version-matrix](./.github/workflows/sdk-go-version-matrix.yml) | Exposes a repository's supported Go versions as a CI test matrix.      |
+| [sdk-go-versions](./.github/workflows/sdk-go-versions.yml)             | Opens PRs bumping supported Go versions after an upstream release.     |
+| [sdk-stale](./.github/workflows/sdk-stale.yml)                         | Warns about stale issues, and then closes when required.               |
+| [lint-pr-title](./.github/workflows/lint-pr-title.yml)                 | Ensures PR titles follow [Conventional Commits][conventional-commits]. |
 
 
 [conventional-commits]: https://www.conventionalcommits.org/en/v1.0.0/

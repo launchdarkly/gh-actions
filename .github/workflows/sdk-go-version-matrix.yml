@@ -1,0 +1,95 @@
+name: Go Version Matrix
+# Call this by uses: launchdarkly/gh-actions/.github/workflows/sdk-go-version-matrix.yml@main
+# A reusable workflow rather than an action because `strategy.matrix` reads only `needs.*`.
+
+on:
+  workflow_call:
+    inputs:
+      versions_file:
+        description: 'Path to the file holding the `latest=`, `penultimate=` and optional `min=` values.'
+        required: false
+        default: .github/variables/go-versions.env
+        type: string
+      runs_on:
+        description: 'Runner specification'
+        required: false
+        default: ubuntu-latest
+        type: string
+    outputs:
+      latest:
+        description: 'The most recent Go version to test.'
+        value: ${{ jobs.go-versions.outputs.latest }}
+      penultimate:
+        description: 'The second most recent Go version to test.'
+        value: ${{ jobs.go-versions.outputs.penultimate }}
+      min:
+        description: 'The minimum Go version to test, or the empty string when the versions file sets no `min=`.'
+        value: ${{ jobs.go-versions.outputs.min }}
+      matrix:
+        description: 'The distinct versions to test, as a JSON array for `strategy.matrix`.'
+        value: ${{ jobs.go-versions.outputs.matrix }}
+
+jobs:
+  go-versions:
+    runs-on: ${{ inputs.runs_on }}
+    permissions:
+      contents: read
+    timeout-minutes: 5
+    outputs:
+      latest: ${{ steps.versions.outputs.latest }}
+      penultimate: ${{ steps.versions.outputs.penultimate }}
+      min: ${{ steps.versions.outputs.min }}
+      matrix: ${{ steps.versions.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Read Go versions
+        id: versions
+        env:
+          VERSIONS_FILE: ${{ inputs.versions_file }}
+        run: |
+          set -euo pipefail
+
+          if [ ! -f "$VERSIONS_FILE" ]; then
+            echo "::error::Go versions file not found: $VERSIONS_FILE"
+            exit 1
+          fi
+
+          value_of() {
+            grep -E "^$1=" "$VERSIONS_FILE" | head -1 | cut -d= -f2- | tr -d '[:space:]'
+          }
+
+          latest=$(value_of latest) || true
+          penultimate=$(value_of penultimate) || true
+          min=$(value_of min) || true
+
+          for key in latest penultimate; do
+            if [ -z "${!key}" ]; then
+              echo "::error::No ${key}= entry found in $VERSIONS_FILE"
+              exit 1
+            fi
+          done
+
+          ordered=("$latest" "$penultimate")
+          if [ -n "$min" ]; then
+            ordered+=("$min")
+          fi
+
+          for version in "${ordered[@]}"; do
+            if [[ ! "$version" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
+              echo "::error::Unexpected Go version string in $VERSIONS_FILE: '$version'"
+              exit 1
+            fi
+          done
+
+          distinct=$(printf '%s\n' "${ordered[@]}" | awk '!seen[$0]++')
+          matrix=$(jq -Rsc 'split("\n") | map(select(length > 0))' <<<"$distinct")
+
+          echo "Go versions to test: $(tr '\n' ' ' <<<"$distinct")"
+
+          {
+            echo "latest=$latest"
+            echo "penultimate=$penultimate"
+            echo "min=$min"
+            echo "matrix=$matrix"
+          } >>"$GITHUB_OUTPUT"
