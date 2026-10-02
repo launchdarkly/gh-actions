@@ -45,8 +45,7 @@ runs:
       shell: bash
       if: ${{ inputs.consul == 'true' && runner.os == 'Linux' }}
       run: |
-        # 1.21.5 has a known issue https://github.com/hashicorp/consul/issues/22822 so we need to run 1.21.4 until they fix the issue
-        docker run -d --name consul -p ${{ inputs.consul_port }}:8500 hashicorp/consul:1.21.4
+        docker run -d --name consul -p ${{ inputs.consul_port }}:8500 hashicorp/consul:2.0.4
 
     - name: "DynamoDB for Linux"
       shell: bash
@@ -77,14 +76,11 @@ runs:
     - name: "Consul for Windows"
       shell: powershell
       if: ${{ inputs.consul == 'true' && runner.os == 'Windows' }}
-      # 1.21.5 has a known issue
-      # https://github.com/hashicorp/consul/issues/22822 so we need to run
-      # 1.20.1 until they fix the issue
       run: |
         # The chocolatey package would otherwise register Consul as a Windows
         # service which races with the dev agent for port binding. /noservice
         # skips that registration so only the dev agent runs.
-        choco install consul --version=1.20.1 --params="'/noservice'"
+        choco install consul --version=2.0.4 --params="'/noservice'"
 
         Start-Process consul -ArgumentList 'agent', '-dev', '-http-port=${{ inputs.consul_port }}'
 
