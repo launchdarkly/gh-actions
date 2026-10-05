@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/launchdarkly/gh-actions/compare/persistent-stores-v0.2.1...persistent-stores-v0.2.2) (2026-10-05)
+
+
+### Bug Fixes
+
+* Update Consul to 2.0.4 in persistent-stores action ([#121](https://github.com/launchdarkly/gh-actions/issues/121)) ([1cfd988](https://github.com/launchdarkly/gh-actions/commit/1cfd988d6c2173b258a4507a99d4bcff6bd7767e))
+
 ## [0.2.1](https://github.com/launchdarkly/gh-actions/compare/persistent-stores-v0.2.0...persistent-stores-v0.2.1) (2026-06-08)
 
 
