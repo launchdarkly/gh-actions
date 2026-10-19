@@ -1,4 +1,5 @@
 {
+  "actions/check-released-go-deps": "0.0.0",
   "actions/contract-tests": "1.3.0",
   "actions/go-eol-versions": "0.1.1",
   "actions/persistent-stores": "0.2.2",

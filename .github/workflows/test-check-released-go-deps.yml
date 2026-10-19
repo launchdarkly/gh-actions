@@ -1,0 +1,223 @@
+name: Test check-released-go-deps
+
+# Runs the check-released-go-deps action against the fixtures in
+# actions/check-released-go-deps/test. Must-fail cases use continue-on-error,
+# and the last step checks that each one failed with the expected number of
+# violations ("none" means a usage error, which writes no violations output).
+
+on:
+  pull_request:
+    paths:
+      - 'actions/check-released-go-deps/**'
+      - '.github/workflows/test-check-released-go-deps.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'actions/check-released-go-deps/**'
+      - '.github/workflows/test-check-released-go-deps.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        # ubuntu-latest runs mawk; macos-latest runs bash 3.2 and BSD awk.
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Show the bash and awk versions
+        run: |
+          bash --version | head -1
+          awk --version </dev/null 2>&1 | head -1
+
+      - name: 'Pass: released versions and third-party pseudo-versions'
+        uses: ./actions/check-released-go-deps
+        with:
+          go_mod_files: actions/check-released-go-deps/test/released.mod
+
+      - name: 'Pass: a pseudo-version listed in allowed'
+        uses: ./actions/check-released-go-deps
+        with:
+          go_mod_files: actions/check-released-go-deps/test/allowed.mod
+          allowed: |
+            # Comment lines and blank lines are ignored.
+
+            github.com/launchdarkly/api-client-go/v13@v13.0.1-0.20230420175109-f5469391a13e
+
+      - name: 'Pass: an excluded go.mod file is not checked'
+        uses: ./actions/check-released-go-deps
+        with:
+          go_mod_files: |
+            actions/check-released-go-deps/test/released.mod
+            actions/check-released-go-deps/test/pseudo-version.mod
+          exclude: actions/check-released-go-deps/test/pseudo-version.mod
+
+      - name: 'Pass: a custom module prefix'
+        uses: ./actions/check-released-go-deps
+        with:
+          go_mod_files: actions/check-released-go-deps/test/custom-prefix.mod
+          module_prefixes: example.com/acme/
+
+      - name: 'Fail: a pseudo-version'
+        id: fail_pseudo_version
+        continue-on-error: true
+        uses: ./actions/check-released-go-deps
+        with:
+          go_mod_files: actions/check-released-go-deps/test/pseudo-version.mod
+
+      - name: 'Fail: a pre-release tag'
+        id: fail_prerelease
+        continue-on-error: true
+        uses: ./actions/check-released-go-deps
+        with:
+          go_mod_files: actions/check-released-go-deps/test/prerelease.mod
+
+      - name: 'Fail: an indirect pre-release tag'
+        id: fail_indirect_prerelease
+        continue-on-error: true
+        uses: ./actions/check-released-go-deps
+        with:
+          go_mod_files: actions/check-released-go-deps/test/indirect-prerelease.mod
+
+      - name: 'Fail: a replace of an enforced module'
+        id: fail_replace
+        continue-on-error: true
+        uses: ./actions/check-released-go-deps
+        with:
+          go_mod_files: actions/check-released-go-deps/test/replace.mod
+
+      - name: 'Fail: a versioned replace of an enforced module in a replace block'
+        id: fail_replace_block
+        continue-on-error: true
+        uses: ./actions/check-released-go-deps
+        with:
+          go_mod_files: actions/check-released-go-deps/test/replace-block.mod
+
+      - name: 'Fail: a replace that targets a pseudo-version of an enforced module'
+        id: fail_replace_target
+        continue-on-error: true
+        uses: ./actions/check-released-go-deps
+        with:
+          go_mod_files: actions/check-released-go-deps/test/replace-target.mod
+
+      - name: 'Fail: a replace of an allowed module@version'
+        id: fail_replace_allowed
+        continue-on-error: true
+        uses: ./actions/check-released-go-deps
+        with:
+          go_mod_files: actions/check-released-go-deps/test/replace-allowed.mod
+          allowed: github.com/launchdarkly/api-client-go/v13@v13.0.1-0.20230420175109-f5469391a13e
+
+      - name: 'Fail: a different version of an allowed module'
+        id: fail_allowed_other_version
+        continue-on-error: true
+        uses: ./actions/check-released-go-deps
+        with:
+          go_mod_files: actions/check-released-go-deps/test/allowed-other-version.mod
+          allowed: github.com/launchdarkly/api-client-go/v13@v13.0.1-0.20230420175109-f5469391a13e
+
+      - name: 'Fail: a pseudo-version that allowed does not list'
+        id: fail_allowed_not_set
+        continue-on-error: true
+        uses: ./actions/check-released-go-deps
+        with:
+          go_mod_files: actions/check-released-go-deps/test/allowed.mod
+
+      - name: 'Fail: a pseudo-version under a custom module prefix'
+        id: fail_custom_prefix
+        continue-on-error: true
+        uses: ./actions/check-released-go-deps
+        with:
+          go_mod_files: actions/check-released-go-deps/test/custom-prefix-unreleased.mod
+          module_prefixes: example.com/acme/
+
+      - name: 'Fail: a pseudo-version under the second of two module prefixes'
+        id: fail_multiple_prefixes
+        continue-on-error: true
+        uses: ./actions/check-released-go-deps
+        with:
+          go_mod_files: actions/check-released-go-deps/test/custom-prefix.mod
+          module_prefixes: |
+            example.com/acme/
+            github.com/launchdarkly/
+
+      - name: 'Fail: a go.mod file that does not exist'
+        id: fail_missing_file
+        continue-on-error: true
+        uses: ./actions/check-released-go-deps
+        with:
+          go_mod_files: actions/check-released-go-deps/test/missing.mod
+
+      - name: 'Fail: an allowed entry without a version'
+        id: fail_bad_allowed
+        continue-on-error: true
+        uses: ./actions/check-released-go-deps
+        with:
+          go_mod_files: actions/check-released-go-deps/test/released.mod
+          allowed: github.com/launchdarkly/api-client-go/v13
+
+      - name: Stage go.mod files for the default file list
+        run: |
+          mkdir -p discovery/module discovery/scaffolding
+          cp actions/check-released-go-deps/test/released.mod discovery/go.mod
+          cp actions/check-released-go-deps/test/released.mod discovery/module/go.mod
+          cp actions/check-released-go-deps/test/pseudo-version.mod discovery/scaffolding/go.mod
+          git add discovery
+
+      - name: 'Pass: the default file list with an excluded directory'
+        uses: ./actions/check-released-go-deps
+        with:
+          exclude: discovery/scaffolding/
+
+      - name: 'Fail: the default file list'
+        id: fail_default_files
+        continue-on-error: true
+        uses: ./actions/check-released-go-deps
+
+      - name: 'Fail: an exclude entry that is only part of a directory name'
+        id: fail_partial_exclude
+        continue-on-error: true
+        uses: ./actions/check-released-go-deps
+        with:
+          exclude: discovery/scaff
+
+      - name: Check that each must-fail case failed for the expected reason
+        if: always()
+        env:
+          STEPS: ${{ toJSON(steps) }}
+        run: |
+          status=0
+          while read -r id want; do
+            outcome=$(jq -r --arg id "$id" '.[$id].outcome // "missing"' <<<"$STEPS")
+            violations=$(jq -r --arg id "$id" '.[$id].outputs.violations // "" | if . == "" then "none" else . end' <<<"$STEPS")
+            if [ "$outcome" != "failure" ] || [ "$violations" != "$want" ]; then
+              echo "::error::$id: outcome $outcome with violations $violations, expected failure with violations $want"
+              status=1
+            else
+              echo "$id: failed as expected (violations: $violations)"
+            fi
+          done <<'EOF'
+          fail_pseudo_version 1
+          fail_prerelease 1
+          fail_indirect_prerelease 1
+          fail_replace 1
+          fail_replace_block 1
+          fail_replace_target 1
+          fail_replace_allowed 1
+          fail_allowed_other_version 1
+          fail_allowed_not_set 1
+          fail_custom_prefix 1
+          fail_multiple_prefixes 1
+          fail_missing_file none
+          fail_bad_allowed none
+          fail_default_files 1
+          fail_partial_exclude 1
+          EOF
+          exit $status
