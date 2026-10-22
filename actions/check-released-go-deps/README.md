@@ -75,7 +75,7 @@ jobs:
   check-released-dependencies:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: launchdarkly/gh-actions/actions/check-released-go-deps@check-released-go-deps-v0.1.0
         with:
           # testservice/ is unpublished, and replaces the SDK with ../ on purpose.
