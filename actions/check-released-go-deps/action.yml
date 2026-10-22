@@ -1,0 +1,35 @@
+name: Check Released Go Dependencies
+description: Fail when go.mod files depend on unreleased versions of chosen modules.
+inputs:
+  module_prefixes:
+    description: 'Newline-separated module path prefixes to enforce.'
+    required: false
+    default: 'github.com/launchdarkly/'
+  go_mod_files:
+    description: 'Newline-separated go.mod paths to check. Defaults to every go.mod file tracked by git.'
+    required: false
+    default: ''
+  exclude:
+    description: 'Newline-separated go.mod paths or directories to skip, such as testservice/.'
+    required: false
+    default: ''
+  allowed:
+    description: 'Newline-separated exact module@version pins to allow. An entry never allows a replace directive.'
+    required: false
+    default: ''
+outputs:
+  violations:
+    description: 'The number of unreleased dependency references found.'
+    value: ${{ steps.check.outputs.violations }}
+runs:
+  using: composite
+  steps:
+    - name: Check go.mod files for unreleased dependencies
+      id: check
+      shell: bash
+      run: source "$GITHUB_ACTION_PATH/check-released-go-deps.sh"
+      env:
+        MODULE_PREFIXES: ${{ inputs.module_prefixes }}
+        GO_MOD_FILES: ${{ inputs.go_mod_files }}
+        EXCLUDE: ${{ inputs.exclude }}
+        ALLOWED: ${{ inputs.allowed }}

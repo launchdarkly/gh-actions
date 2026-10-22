@@ -3,6 +3,12 @@
   "include-component-in-tag": true,
   "include-v-in-tag": true,
   "packages": {
+    "actions/check-released-go-deps": {
+      "release-type": "simple",
+      "package-name": "check-released-go-deps",
+      "initial-version": "0.1.0",
+      "bump-minor-pre-major": true
+    },
     "actions/contract-tests": {
       "release-type": "simple",
       "package-name": "contract-tests"

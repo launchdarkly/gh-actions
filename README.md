@@ -4,16 +4,17 @@ This repository contains LaunchDarkly shared GitHub Actions and Workflows for ot
 
 
 ## Actions
-| Name                                                          | Description                                   |
-|---------------------------------------------------------------|-----------------------------------------------|
-| [contract-tests](./actions/contract-tests/README.md)          | Run SDK/SSE contract tests.                   |
-| [dependency-scan](./actions/dependency-scan/README.md)        | Generate SBOM and evaluate license policy.    |
-| [go-eol-versions](./actions/go-eol-versions/README.md)        | Report upstream-supported Go versions.        |
-| [persistent-stores](./actions/persistent-stores/README.md)    | Start persistent stores on linux/mac/windows. |
-| [publish-pages](./actions/publish-pages/README.md)            | Publishes documentation to Github Pages.      |
-| [release-secrets](./actions/release-secrets/README.md)        | Retrieve secrets from AWS Secrets Manager.    |
-| [sign-dlls](./actions/sign-dlls/README.md)                    | Sign dotnet DLL (assembly) files.             |
-| [verify-hello-apps](./actions/verify-hello-app/README.md)     | Run shared quality-checks for hello-apps.     |
+| Name                                                                 | Description                                   |
+|----------------------------------------------------------------------|-----------------------------------------------|
+| [check-released-go-deps](./actions/check-released-go-deps/README.md) | Fail on unreleased Go module dependencies.    |
+| [contract-tests](./actions/contract-tests/README.md)                 | Run SDK/SSE contract tests.                   |
+| [dependency-scan](./actions/dependency-scan/README.md)               | Generate SBOM and evaluate license policy.    |
+| [go-eol-versions](./actions/go-eol-versions/README.md)               | Report upstream-supported Go versions.        |
+| [persistent-stores](./actions/persistent-stores/README.md)           | Start persistent stores on linux/mac/windows. |
+| [publish-pages](./actions/publish-pages/README.md)                   | Publishes documentation to Github Pages.      |
+| [release-secrets](./actions/release-secrets/README.md)               | Retrieve secrets from AWS Secrets Manager.    |
+| [sign-dlls](./actions/sign-dlls/README.md)                           | Sign dotnet DLL (assembly) files.             |
+| [verify-hello-apps](./actions/verify-hello-app/README.md)            | Run shared quality-checks for hello-apps.     |
 
 ## Workflows
 | Name                                                                   | Description                                                            |
