@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.2](https://github.com/launchdarkly/gh-actions/compare/verify-hello-app-v2.0.1...verify-hello-app-v2.0.2) (2026-11-17)
+
+
+### Bug Fixes
+
+* Run the shared actions on Node.js 24 ([#128](https://github.com/launchdarkly/gh-actions/issues/128)) ([af08d2a](https://github.com/launchdarkly/gh-actions/commit/af08d2a411bc3215869e0ceaa797c6903a0e9f57))
+
 ## [2.0.1](https://github.com/launchdarkly/gh-actions/compare/verify-hello-app-v2.0.0...verify-hello-app-v2.0.1) (2024-08-12)
 
 
