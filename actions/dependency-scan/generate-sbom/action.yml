@@ -34,6 +34,8 @@ runs:
     uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
     with:
       node-version: 20.x
+      # This step only installs cdxgen globally. Do not cache the caller's npm dependencies.
+      package-manager-cache: false
 
   - name: Install cdxgen
     run: npm list -g | grep -qF @cyclonedx/cdxgen@${{ inputs.cdxgen-version }} || npm install -g @cyclonedx/cdxgen@${{ inputs.cdxgen-version }}
