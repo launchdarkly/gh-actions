@@ -1,0 +1,25 @@
+name: Rust EOL Versions
+description: Fetch and validate a recent Rust release cycle, for use as a minimum supported Rust version.
+inputs:
+  offset:
+    description: 'How many releases back from the newest to report. 0 is the newest release. The default, 2, gives the third newest.'
+    required: false
+    default: '2'
+  api_url:
+    description: 'The endoflife.date endpoint to query. Override only for testing.'
+    required: false
+    default: 'https://endoflife.date/api/rust.json'
+outputs:
+  target:
+    description: 'The Rust release cycle at the requested offset, for example 1.98.'
+    value: ${{ steps.rust-versions.outputs.target }}
+runs:
+  using: composite
+  steps:
+    - name: Fetch Rust release cycles
+      id: rust-versions
+      shell: bash
+      run: source "$GITHUB_ACTION_PATH/rust-eol-versions.sh"
+      env:
+        OFFSET: ${{ inputs.offset }}
+        API_URL: ${{ inputs.api_url }}

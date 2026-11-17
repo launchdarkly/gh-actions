@@ -1,0 +1,85 @@
+name: Test rust-eol-versions
+
+# Runs rust-eol-versions against the live endoflife.date feed, and against
+# local payloads that it must reject.
+
+on:
+  pull_request:
+    paths:
+      - 'actions/rust-eol-versions/**'
+      - '.github/workflows/test-rust-eol-versions.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'actions/rust-eol-versions/**'
+      - '.github/workflows/test-rust-eol-versions.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Fetch the target Rust release cycle
+        id: rust-versions
+        uses: ./actions/rust-eol-versions
+
+      - name: Check the output
+        env:
+          TARGET: ${{ steps.rust-versions.outputs.target }}
+        run: |
+          echo "target=$TARGET"
+          [[ "$TARGET" =~ ^[0-9]+\.[0-9]+$ ]]
+
+  rejects:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: command substitution in cycle
+            payload: '[{"cycle":"1.99"},{"cycle":"1.98"},{"cycle":"1.97$(id)"}]'
+            offset: '2'
+          - name: quote in cycle
+            payload: '[{"cycle":"1.99"},{"cycle":"1.98"},{"cycle":"1.97\" && id && \""}]'
+            offset: '2'
+          - name: missing entry
+            payload: '[{"cycle":"1.99"}]'
+            offset: '2'
+          - name: offset is not a number
+            payload: '[{"cycle":"1.99"}]'
+            offset: '0 | .x'
+    name: rejects ${{ matrix.name }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Write the payload
+        env:
+          PAYLOAD: ${{ matrix.payload }}
+        run: printf '%s' "$PAYLOAD" >"$RUNNER_TEMP/rust.json"
+
+      - name: Run the action
+        id: rust-versions
+        continue-on-error: true
+        uses: ./actions/rust-eol-versions
+        with:
+          offset: ${{ matrix.offset }}
+          api_url: file://${{ runner.temp }}/rust.json
+
+      - name: Check that the action failed
+        env:
+          OUTCOME: ${{ steps.rust-versions.outcome }}
+          TARGET: ${{ steps.rust-versions.outputs.target }}
+        run: |
+          if [ "$OUTCOME" != failure ] || [ -n "$TARGET" ]; then
+            echo "::error::Expected the action to fail with no output, got outcome '$OUTCOME' and target '$TARGET'"
+            exit 1
+          fi

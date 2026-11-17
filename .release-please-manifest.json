@@ -5,6 +5,7 @@
   "actions/persistent-stores": "0.2.2",
   "actions/publish-pages": "1.0.4",
   "actions/release-secrets": "1.2.1",
+  "actions/rust-eol-versions": "0.0.0",
   "actions/sign-dlls": "1.0.1",
   "actions/sync-snippets": "1.0.0",
   "actions/verify-hello-app": "2.0.2"

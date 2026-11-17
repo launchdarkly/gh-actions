@@ -1,0 +1,137 @@
+name: Check Supported Rust Versions
+# Call this by uses: launchdarkly/gh-actions/.github/workflows/sdk-rust-versions.yml@main
+# The calling job must grant `contents: write` and `pull-requests: write`.
+
+on:
+  workflow_call:
+    inputs:
+      branches:
+        description: 'JSON array of branches to open bump pull requests against, e.g. ''["main"]''.'
+        required: false
+        default: '["main"]'
+        type: string
+      offset:
+        description: 'How many releases back from the newest Rust release to target. The default, 2, targets the third newest.'
+        required: false
+        default: '2'
+        type: string
+      versions_file:
+        description: 'Path to the file holding the current `target=` value.'
+        required: false
+        default: .github/variables/rust-versions.env
+        type: string
+      cargo_tomls:
+        description: 'Newline-separated list of Cargo.toml files whose `rust-version` is set to `<target>.0`.'
+        required: false
+        default: Cargo.toml
+        type: string
+      pr_title_prefix:
+        description: 'Conventional-commit prefix for the pull request title, e.g. "fix" for an SDK, where an MSRV change ships in a release, or "chore".'
+        required: false
+        default: fix
+        type: string
+      runs_on:
+        description: 'Runner specification'
+        required: false
+        default: ubuntu-latest
+        type: string
+
+jobs:
+  check-rust-eol:
+    runs-on: ${{ inputs.runs_on }}
+    permissions:
+      contents: read
+    timeout-minutes: 5
+    outputs:
+      target: ${{ steps.rust-versions.outputs.target }}
+    steps:
+      - name: Fetch the target Rust release cycle
+        id: rust-versions
+        uses: launchdarkly/gh-actions/actions/rust-eol-versions@main
+        with:
+          offset: ${{ inputs.offset }}
+
+  create-prs:
+    needs: check-rust-eol
+    runs-on: ${{ inputs.runs_on }}
+    permissions:
+      contents: write
+      pull-requests: write
+    strategy:
+      matrix:
+        branch: ${{ fromJSON(inputs.branches) }}
+      fail-fast: false
+    env:
+      officialTarget: ${{ needs.check-rust-eol.outputs.target }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ matrix.branch }}
+          persist-credentials: false
+
+      - name: Get the current Rust version
+        id: current
+        env:
+          VERSIONS_FILE: ${{ inputs.versions_file }}
+          BRANCH: ${{ matrix.branch }}
+        run: |
+          set -euo pipefail
+          value=$(grep -E '^target=' "$VERSIONS_FILE" | head -1 | cut -d= -f2- | tr -d '[:space:]')
+          if [ -z "$value" ]; then
+            echo "::error::No target= entry found in $VERSIONS_FILE on $BRANCH"
+            exit 1
+          fi
+          echo "target=$value" >>"$GITHUB_OUTPUT"
+
+      - name: Update the Rust version
+        if: steps.current.outputs.target != env.officialTarget
+        id: update
+        env:
+          VERSIONS_FILE: ${{ inputs.versions_file }}
+          CARGO_TOMLS: ${{ inputs.cargo_tomls }}
+        run: |
+          set -euo pipefail
+          # rust-eol-versions validates this value. Check it again, because
+          # the value goes into sed below.
+          if [[ ! "$officialTarget" =~ ^[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Unexpected Rust release cycle: '$officialTarget'"
+            exit 1
+          fi
+          sed -i -e "s#^target=.*#target=$officialTarget#" "$VERSIONS_FILE"
+
+          paths="$VERSIONS_FILE"
+          while IFS= read -r toml; do
+            [ -n "$toml" ] || continue
+            if ! grep -qE '^rust-version = "[^"]*"' "$toml"; then
+              echo "::error::No rust-version entry found in $toml"
+              exit 1
+            fi
+            sed -i -e "s#^rust-version = \"[^\"]*\"#rust-version = \"$officialTarget.0\"#" "$toml"
+            paths="$paths"$'\n'"$toml"
+          done <<<"$CARGO_TOMLS"
+
+          {
+            echo "paths<<SDK_RUST_VERSIONS_PATHS"
+            echo "$paths"
+            echo "SDK_RUST_VERSIONS_PATHS"
+          } >>"$GITHUB_OUTPUT"
+
+      - name: Create pull request
+        if: steps.update.outcome == 'success'
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          add-paths: ${{ steps.update.outputs.paths }}
+          branch: "launchdarklyreleasebot/update-to-rust${{ needs.check-rust-eol.outputs.target }}-${{ matrix.branch }}"
+          author: "LaunchDarklyReleaseBot <LaunchDarklyReleaseBot@launchdarkly.com>"
+          committer: "LaunchDarklyReleaseBot <LaunchDarklyReleaseBot@launchdarkly.com>"
+          title: "${{ inputs.pr_title_prefix }}: Bump MSRV from ${{ steps.current.outputs.target }} to ${{ needs.check-rust-eol.outputs.target }}"
+          commit-message: "Bumps the minimum supported Rust version from ${{ steps.current.outputs.target }} to ${{ needs.check-rust-eol.outputs.target }}."
+          body: |
+            A new Rust release moved this branch's minimum supported Rust version. The
+            branch targets the Rust release that is ${{ inputs.offset }} releases older
+            than the newest one.
+
+            Opened by [sdk-rust-versions](https://github.com/launchdarkly/gh-actions/blob/main/.github/workflows/sdk-rust-versions.yml).
+
+            - [ ] I have triggered CI on this PR (either close & reopen this PR in Github UI, or `git commit -m "run ci" --allow-empty && git push`)
