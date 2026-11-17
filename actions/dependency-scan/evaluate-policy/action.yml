@@ -78,12 +78,18 @@ runs:
       if: inputs.artifacts-pattern != ''
       uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
-        path: .
+        # download-artifact v5 and later put the files of a single matched
+        # artifact directly in path, but put each of several matched artifacts
+        # in its own subdirectory. merge-multiple gives one flat layout in both
+        # cases. A separate directory keeps the caller's own JSON files out of
+        # the merge.
+        path: ${{ runner.temp }}/boms
         pattern: ${{ inputs.artifacts-pattern }}
+        merge-multiple: true
 
     - name: Merge BOMs
       if: inputs.artifacts-pattern != ''
-      run: cyclonedx merge --input-files ${{ inputs.artifacts-pattern }}/*.json --output-file ${{ inputs.bom-file }}
+      run: cyclonedx merge --input-files "$RUNNER_TEMP"/boms/*.json --output-file ${{ inputs.bom-file }}
       shell: bash
 
     - name: Store Bill of Materials
