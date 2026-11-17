@@ -20,7 +20,7 @@ runs:
   using: composite
   steps:
     # We put the github pages in another directory.
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v7
       with:
         path: gh-pages
         ref: ${{ inputs.pages_branch }}

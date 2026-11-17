@@ -19,7 +19,7 @@ jobs:
   generate-sbom:
     runs-on: ${{ inputs.runs-on }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Generate SBOM
         uses: launchdarkly/gh-actions/actions/dependency-scan/generate-sbom@main
@@ -31,7 +31,7 @@ jobs:
     needs:
       - generate-sbom
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Evaluate SBOM Policy
         uses: launchdarkly/gh-actions/actions/dependency-scan/evaluate-policy@main
