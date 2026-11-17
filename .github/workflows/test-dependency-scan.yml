@@ -1,0 +1,45 @@
+name: Test dependency-scan
+
+# Runs the dependency-scan composite actions from this branch. Consumers call
+# these actions at @main, so a change reaches every consumer when it merges.
+# This workflow tests the change before that happens.
+
+on:
+  pull_request:
+    paths:
+      - 'actions/dependency-scan/**'
+      - '.github/workflows/test-dependency-scan.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'actions/dependency-scan/**'
+      - '.github/workflows/test-dependency-scan.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  # Consumers run one generate-sbom job, so the pattern matches one artifact.
+  # This is the case to test. evaluate-policy always uploads an artifact named
+  # merged-bom, so one run can only test one evaluate-policy job.
+  generate-sbom:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: ./actions/dependency-scan/generate-sbom
+        with:
+          types: nodejs
+          project-directory: actions/release-secrets/ssm
+          ensure-non-empty: 'true'
+
+  evaluate-policy:
+    runs-on: ubuntu-latest
+    needs: generate-sbom
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: ./actions/dependency-scan/evaluate-policy
+        with:
+          artifacts-pattern: bom-*

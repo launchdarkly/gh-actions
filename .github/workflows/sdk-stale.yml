@@ -9,7 +9,7 @@ jobs:
     if: endsWith(github.repository, 'private') != true
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/stale@v7
+      - uses: actions/stale@v11
         with:
           stale-issue-message: 'This issue is marked as stale because it has been open for 30 days without activity. Remove the stale label or comment, or this will be closed in 7 days.'
           any-of-labels: 'waiting for feedback'
