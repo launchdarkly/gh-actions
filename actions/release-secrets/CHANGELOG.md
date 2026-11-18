@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/launchdarkly/gh-actions/compare/release-secrets-v1.2.1...release-secrets-v1.2.2) (2026-11-18)
+
+
+### Bug Fixes
+
+* bump undici to 6.29.1 and vitest to 5.0.5 in release-secrets/ssm ([#127](https://github.com/launchdarkly/gh-actions/issues/127)) ([1c70b79](https://github.com/launchdarkly/gh-actions/commit/1c70b79aa9c84f604927d912cfe926761b77a43f))
+
 ## [1.2.1](https://github.com/launchdarkly/gh-actions/compare/release-secrets-v1.2.0...release-secrets-v1.2.1) (2026-07-09)
 
 
