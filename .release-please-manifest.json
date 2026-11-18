@@ -4,7 +4,7 @@
   "actions/go-eol-versions": "0.1.1",
   "actions/persistent-stores": "0.2.2",
   "actions/publish-pages": "1.0.4",
-  "actions/release-secrets": "1.2.1",
+  "actions/release-secrets": "1.2.2",
   "actions/rust-eol-versions": "0.1.0",
   "actions/sign-dlls": "1.0.1",
   "actions/sync-snippets": "1.0.0",
