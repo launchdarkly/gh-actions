@@ -31,6 +31,12 @@
       "release-type": "simple",
       "package-name": "release-secrets"
     },
+    "actions/rust-eol-versions": {
+      "release-type": "simple",
+      "package-name": "rust-eol-versions",
+      "initial-version": "0.1.0",
+      "bump-minor-pre-major": true
+    },
     "actions/sign-dlls": {
       "release-type": "simple",
       "package-name": "sign-dlls"

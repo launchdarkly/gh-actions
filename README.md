@@ -13,6 +13,7 @@ This repository contains LaunchDarkly shared GitHub Actions and Workflows for ot
 | [persistent-stores](./actions/persistent-stores/README.md)           | Start persistent stores on linux/mac/windows. |
 | [publish-pages](./actions/publish-pages/README.md)                   | Publishes documentation to Github Pages.      |
 | [release-secrets](./actions/release-secrets/README.md)               | Retrieve secrets from AWS Secrets Manager.    |
+| [rust-eol-versions](./actions/rust-eol-versions/README.md)           | Report a Rust release to use as an MSRV.      |
 | [sign-dlls](./actions/sign-dlls/README.md)                           | Sign dotnet DLL (assembly) files.             |
 | [verify-hello-apps](./actions/verify-hello-app/README.md)            | Run shared quality-checks for hello-apps.     |
 
@@ -22,6 +23,7 @@ This repository contains LaunchDarkly shared GitHub Actions and Workflows for ot
 | [dependency-scan](./.github/workflows/dependency-scan.yml)             | Generates SBOM and evaluates license policy.                           |
 | [sdk-go-version-matrix](./.github/workflows/sdk-go-version-matrix.yml) | Exposes a repository's supported Go versions as a CI test matrix.      |
 | [sdk-go-versions](./.github/workflows/sdk-go-versions.yml)             | Opens PRs bumping supported Go versions after an upstream release.     |
+| [sdk-rust-versions](./.github/workflows/sdk-rust-versions.yml)         | Opens PRs bumping the Rust MSRV after an upstream release.             |
 | [sdk-stale](./.github/workflows/sdk-stale.yml)                         | Warns about stale issues, and then closes when required.               |
 | [lint-pr-title](./.github/workflows/lint-pr-title.yml)                 | Ensures PR titles follow [Conventional Commits][conventional-commits]. |
 
