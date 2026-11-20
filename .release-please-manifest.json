@@ -6,7 +6,7 @@
   "actions/publish-pages": "1.0.4",
   "actions/release-secrets": "1.2.2",
   "actions/rust-eol-versions": "0.1.0",
-  "actions/sign-dlls": "1.0.1",
+  "actions/sign-dlls": "1.0.2",
   "actions/sync-snippets": "1.0.0",
   "actions/verify-hello-app": "2.0.2"
 }
