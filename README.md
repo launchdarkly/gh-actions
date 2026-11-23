@@ -3,7 +3,7 @@
 These GitHub Actions and Workflows are for LaunchDarkly repositories only. They are not supported for use outside LaunchDarkly.
 
 ## Usage
-Pin each action to its own slash tag:
+Pin each action to its own tag:
 
 ```yaml
 - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets/v1
