@@ -50,11 +50,11 @@ jobs:
               exit 1
             fi
 
-            # Extract component name from tag name (e.g., contract-tests-v1.2.3 -> contract-tests)
-            component=$(echo "$tag_name" | sed 's/-v[0-9].*//')
+            # Extract component name from tag name (e.g., contract-tests/v1.2.3 -> contract-tests)
+            component=$(echo "$tag_name" | sed 's#/v[0-9].*##')
 
             # Create component-specific major tag
-            major_tag="${component}-v${major_version}"
+            major_tag="${component}/v${major_version}"
             echo "Creating major tag: $major_tag for tag: $tag_name"
 
             # Create and push the major tag (pointing to HEAD since we're on the latest commit)
