@@ -76,7 +76,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: launchdarkly/gh-actions/actions/check-released-go-deps@check-released-go-deps-v0.1.0
+      - uses: launchdarkly/gh-actions/actions/check-released-go-deps@check-released-go-deps/v0.1.0
         with:
           # testservice/ is unpublished, and replaces the SDK with ../ on purpose.
           exclude: testservice/
@@ -85,7 +85,7 @@ jobs:
 With an exemption, as in `ld-relay`:
 
 ```yaml
-      - uses: launchdarkly/gh-actions/actions/check-released-go-deps@check-released-go-deps-v0.1.0
+      - uses: launchdarkly/gh-actions/actions/check-released-go-deps@check-released-go-deps/v0.1.0
         with:
           exclude: cmd/fdv2-integration/
           allowed: |
@@ -97,7 +97,7 @@ With an exemption, as in `ld-relay`:
 For another organization, or for several:
 
 ```yaml
-      - uses: launchdarkly/gh-actions/actions/check-released-go-deps@check-released-go-deps-v0.1.0
+      - uses: launchdarkly/gh-actions/actions/check-released-go-deps@check-released-go-deps/v0.1.0
         with:
           module_prefixes: |
             github.com/launchdarkly/
@@ -111,4 +111,4 @@ skipped workflow leaves a required check pending.
 
 This action is tracked by release-please and starts at `0.1.0`. While it is below `1.0.0`,
 breaking changes bump the minor version, so pin the exact version, as the examples do, rather
-than the floating `check-released-go-deps-v0` tag.
+than the floating `check-released-go-deps/v0` tag.
