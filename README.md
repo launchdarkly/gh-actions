@@ -1,7 +1,13 @@
 # LaunchDarkly repository for shared GitHub Actions and Workflows.
 
-This repository contains LaunchDarkly shared GitHub Actions and Workflows for other LaunchDarkly Repos to use.
+These GitHub Actions and Workflows are for LaunchDarkly repositories only. They are not supported for use outside LaunchDarkly.
 
+## Usage
+Pin each action to its own slash tag:
+
+```yaml
+- uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets/v1
+```
 
 ## Actions
 | Name                                                                 | Description                                   |

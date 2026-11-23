@@ -53,12 +53,11 @@ jobs:
             # Extract component name from tag name (e.g., contract-tests/v1.2.3 -> contract-tests)
             component=$(echo "$tag_name" | sed 's#/v[0-9].*##')
 
-            # Consumers that pin the older dash-style major tag (e.g., contract-tests-v1) must keep getting updates.
-            for major_tag in "${component}/v${major_version}" "${component}-v${major_version}"; do
-              echo "Creating major tag: $major_tag for tag: $tag_name"
+            # Create component-specific major tag
+            major_tag="${component}/v${major_version}"
+            echo "Creating major tag: $major_tag for tag: $tag_name"
 
-              # Create and push the major tag (pointing to HEAD since we're on the latest commit)
-              git tag -f "$major_tag" HEAD
-              git push -f origin "$major_tag"
-            done
+            # Create and push the major tag (pointing to HEAD since we're on the latest commit)
+            git tag -f "$major_tag" HEAD
+            git push -f origin "$major_tag"
           done
