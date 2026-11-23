@@ -20,13 +20,13 @@ The repository must be configured with OIDC, allowing access to an AWS account.
 
 This example uses the sign-dlls action to sign the dotnet client DLLs.
 ```
-- uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.2.0
+- uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets/v1.2.2
   name: Get secrets
   with:
     aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
     ssm_parameter_pairs: '/production/common/releasing/digicert/host = DIGICERT_HOST,/production/common/releasing/digicert/api_key = DIGICERT_API_KEY,/production/common/releasing/digicert/client_cert_file_b64 = DIGICERT_CLIENT_CERT_FILE_B64,/production/common/releasing/digicert/client_cert_password = DIGICERT_CLIENT_CERT_PASSWORD,/production/common/releasing/digicert/code_signing_cert_sha1_hash = DIGICERT_CODE_SIGNING_CERT_SHA1_HASH'
 
-- uses: launchdarkly/gh-actions/actions/sign-dlls@sign-dlls-v1.0.0
+- uses: launchdarkly/gh-actions/actions/sign-dlls@sign-dlls/v1.0.2
   name: 'Sign DLLs'
   with:
     build_configuration_path: './src/LaunchDarkly.ClientSdk/bin/Release'

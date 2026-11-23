@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@v3
 
       # Here's the actual usage of this action!
-      - uses: launchdarkly/gh-actions/actions/persistent-stores@persistent-stores-v0
+      - uses: launchdarkly/gh-actions/actions/persistent-stores@persistent-stores/v0
         with:
           redis: true
           consul: true
@@ -31,7 +31,7 @@ jobs:
           # consul_port: 8500
           # dynamodb_port: 8000
 
-      - uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests-v1
+      - uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests/v1
         with:
           test_service_port: ${{ env.TEST_SERVICE_PORT }}
           enable_persistence_tests: 'true'

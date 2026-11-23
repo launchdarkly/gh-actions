@@ -49,7 +49,7 @@ jobs:
       latest: ${{ steps.go-versions.outputs.latest }}
       penultimate: ${{ steps.go-versions.outputs.penultimate }}
     steps:
-      - uses: launchdarkly/gh-actions/actions/go-eol-versions@go-eol-versions-v0.1.0
+      - uses: launchdarkly/gh-actions/actions/go-eol-versions@go-eol-versions/v0.1.1
         id: go-versions
         with:
           precision: cycle
@@ -61,8 +61,8 @@ The job needs no `actions/checkout`; the action only makes an HTTP request.
 
 This action is tracked by release-please and starts at `0.1.0`. While it is below `1.0.0`,
 breaking changes bump the minor version, so **pin the exact version** as shown above rather
-than the floating `go-eol-versions-v0` tag -- a `v0` pin would follow breaking changes. (Some
-repositories do pin floating majors, such as `persistent-stores-v0` in `python-server-sdk`;
+than the floating `go-eol-versions/v0` tag -- a `v0` pin would follow breaking changes. (Some
+repositories do pin floating majors, such as `persistent-stores/v0` in `python-server-sdk`;
 that is fine for an action whose 0.x line is stable, and a hazard for one whose isn't.)
 
 Repositories outside this one should not reference the action at `@main`. The `renovate/sdk`

@@ -43,7 +43,7 @@ jobs:
     outputs:
       target: ${{ steps.rust-versions.outputs.target }}
     steps:
-      - uses: launchdarkly/gh-actions/actions/rust-eol-versions@rust-eol-versions-v0.1.0
+      - uses: launchdarkly/gh-actions/actions/rust-eol-versions@rust-eol-versions/v0.1.0
         id: rust-versions
 ```
 
@@ -81,5 +81,5 @@ release changes, it rewrites that line and the `rust-version` field in each list
 
 This action is tracked by release-please and starts at `0.1.0`. While it is below `1.0.0`,
 breaking changes bump the minor version, so pin the exact version rather than the floating
-`rust-eol-versions-v0` tag. The in-repo reference from `sdk-rust-versions.yml` uses `@main`,
+`rust-eol-versions/v0` tag. The in-repo reference from `sdk-rust-versions.yml` uses `@main`,
 for the reason given in the [go-eol-versions README](../go-eol-versions/README.md#versioning).
